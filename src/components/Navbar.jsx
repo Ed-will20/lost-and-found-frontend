@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Search, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { LogOut, Search, PlusCircle, LayoutDashboard, MessageCircle } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -21,7 +21,6 @@ export default function Navbar() {
               <span className="text-2xl font-bold text-gray-900">Lost & Found</span>
             </Link>
           </div>
-
           <div className="flex items-center space-x-4">
             <Link
               to="/"
@@ -29,7 +28,6 @@ export default function Navbar() {
             >
               Browse Items
             </Link>
-
             {user ? (
               <>
                 <Link
@@ -45,6 +43,13 @@ export default function Navbar() {
                 >
                   <LayoutDashboard className="h-4 w-4" />
                   <span>Dashboard</span>
+                </Link>
+                <Link
+                  to="/chats"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>Chats</span>
                 </Link>
                 <button
                   onClick={handleLogout}
