@@ -64,7 +64,7 @@ export default function Chats() {
                 {/* Item thumbnail */}
                 {chat.item_images && chat.item_images.length > 0 ? (
                   <img
-                    src={`${API_BASE_URL}${chat.item_images[0]}`}
+                    src={chat.item_images[0].startsWith("https://") ? chat.item_images[0] : `${API_BASE_URL}${chat.item_images[0]}`}
                     alt={chat.item_title}
                     className="h-14 w-14 object-cover rounded-lg border mr-4 flex-shrink-0"
                   />

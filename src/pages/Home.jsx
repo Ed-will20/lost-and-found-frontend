@@ -123,7 +123,7 @@ export default function Home() {
             >
               {item.images && item.images.length > 0 ? (
                 <img
-                  src={`${API_BASE_URL}${item.images[0]}`}
+                  src={item.images[0].startsWith("https://") ? item.images[0] : `${API_BASE_URL}${item.images[0]}`}
                   alt={item.title}
                   className="w-full h-48 object-cover"
                 />

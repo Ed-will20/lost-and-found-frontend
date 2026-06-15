@@ -233,10 +233,10 @@ export default function Dashboard() {
                           {claim.proof_images.map((img, idx) => (
                             <img
                               key={idx}
-                              src={`${API_BASE_URL}${img}`}
+                              src={img.startsWith("https://") ? img : `${API_BASE_URL}${img}`}
                               alt={`Proof ${idx + 1}`}
                               className="h-20 w-20 object-cover rounded border cursor-pointer hover:opacity-80"
-                              onClick={() => setLightboxImg(`${API_BASE_URL}${img}`)}
+                              onClick={() => setLightboxImg(img.startsWith("https://") ? img : `${API_BASE_URL}${img}`)}
                             />
                           ))}
                         </div>

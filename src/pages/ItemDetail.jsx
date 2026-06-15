@@ -97,7 +97,7 @@ export default function ItemDetail() {
             {item.images && item.images.length > 0 ? (
               <div className="h-96">
                 <img
-                  src={`${API_BASE_URL}${item.images[0]}`}
+                  src={item.images[0].startsWith("https://") ? item.images[0] : `${API_BASE_URL}${item.images[0]}`}
                   alt={item.title}
                   className="w-full h-full object-cover"
                 />
@@ -113,7 +113,7 @@ export default function ItemDetail() {
                 {item.images.slice(1).map((img, idx) => (
                   <img
                     key={idx}
-                    src={`${API_BASE_URL}${img}`}
+                    src={img.startsWith("https://") ? img : `${API_BASE_URL}${img}`}
                     alt={`${item.title} ${idx + 2}`}
                     className="h-20 w-full object-cover rounded cursor-pointer hover:opacity-75"
                   />
