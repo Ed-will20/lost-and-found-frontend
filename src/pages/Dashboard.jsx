@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { itemsAPI, claimsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Package, FileText, CheckCircle, XCircle, MessageCircle, Image } from 'lucide-react';
+import { Package, FileText, CheckCircle, XCircle, MessageCircle, Image, Pencil } from 'lucide-react';
 import { API_BASE_URL } from '../config/config';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [myItems, setMyItems] = useState([]);
   const [myClaims, setMyClaims] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -101,13 +102,22 @@ export default function Dashboard() {
                     <Link to={`/items/${item.id}`} className="text-lg font-semibold text-blue-600 hover:text-blue-700">
                       {item.title}
                     </Link>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      item.status === 'found' ? 'bg-green-100 text-green-800' :
-                      item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {item.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        item.status === 'found' ? 'bg-green-100 text-green-800' :
+                        item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                      <button
+                        onClick={() => navigate(`/edit-item/${item.id}`)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-100"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    </div>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">{item.description?.substring(0, 100)}...</p>
                   <button
@@ -145,13 +155,11 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">{claim.proof_description}</p>
-                  {/* Show rejection reason if rejected */}
                   {claim.status === 'rejected' && claim.rejection_reason && (
                     <p className="text-red-600 text-sm mt-1">
                       Reason: {claim.rejection_reason}
                     </p>
                   )}
-                  {/* Approved: show link to chat */}
                   {claim.status === 'approved' && claim.chat_id && (
                     <Link
                       to={`/chats/${claim.chat_id}`}
@@ -181,7 +189,6 @@ export default function Dashboard() {
                 className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
             </div>
 
-            {/* Post-approve handoff banner */}
             {approvedChatId && (
               <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-green-800 font-medium mb-2">✅ Claim approved! A chat has been opened.</p>
@@ -223,7 +230,6 @@ export default function Dashboard() {
 
                     <p className="text-gray-700 mb-3">{claim.proof_description}</p>
 
-                    {/* Proof images */}
                     {claim.proof_images && claim.proof_images.length > 0 && (
                       <div className="mb-3">
                         <p className="text-xs font-medium text-gray-500 mb-1 flex items-center">
@@ -295,7 +301,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Lightbox for proof images */}
       {lightboxImg && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] cursor-pointer"

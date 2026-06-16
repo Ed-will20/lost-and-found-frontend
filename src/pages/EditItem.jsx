@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { Upload, MapPin } from 'lucide-react';
+import { API_BASE_URL } from '../config/config';
 
-export default function PostItem() {
+export default function EditItem() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -17,50 +20,77 @@ export default function PostItem() {
     found_date: '',
     tags: '',
   });
-  const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const res = await itemsAPI.getById(id);
+        const item = res.data.item;
+        setFormData({
+          title: item.title || '',
+          description: item.description || '',
+          category: item.category || '',
+          found_address: item.found_address || '',
+          found_city: item.found_city || '',
+          found_state: item.found_state || '',
+          found_zip: item.found_zip || '',
+          found_lat: item.found_lat || '',
+          found_lng: item.found_lng || '',
+          found_date: item.found_date ? item.found_date.split('T')[0] : '',
+          tags: Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''),
+        });
+        setExistingImages(item.images || []);
+      } catch (err) {
+        setError('Failed to load item');
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchItem();
+  }, [id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleImageChange = (e) => {
-    setImages(Array.from(e.target.files));
+    setNewImages(Array.from(e.target.files));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (images.length === 0) {
-      setError('Please upload at least one image of the item.');
-      return;
-    }
-
     setLoading(true);
     try {
       const data = new FormData();
-      Object.keys(formData).forEach(key => {
-        data.append(key, formData[key]);
-      });
-      images.forEach(image => {
-        data.append('images', image);
-      });
-      await itemsAPI.create(data);
+      Object.keys(formData).forEach(key => data.append(key, formData[key]));
+      newImages.forEach(img => data.append('images', img));
+      await itemsAPI.update(id, data);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to post item');
+      setError(err.response?.data?.error || 'Failed to update item');
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Post Found Item</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Item</h1>
 
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
@@ -77,7 +107,6 @@ export default function PostItem() {
               required
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Brown Leather Wallet"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -90,7 +119,6 @@ export default function PostItem() {
               rows={4}
               value={formData.description}
               onChange={handleChange}
-              placeholder="Describe the item in detail..."
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -127,10 +155,27 @@ export default function PostItem() {
             </select>
           </div>
 
+          {existingImages.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+              <div className="flex gap-2 flex-wrap">
+                {existingImages.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img.startsWith('https://') ? img : `${API_BASE_URL}${img}`}
+                    alt={`Item ${idx + 1}`}
+                    className="h-20 w-20 object-cover rounded border"
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Uploading new images below will replace these.</p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <Upload className="inline h-4 w-4 mr-1" />
-              Upload Images (up to 5) *
+              Replace Images (up to 5)
             </label>
             <input
               type="file"
@@ -139,8 +184,8 @@ export default function PostItem() {
               onChange={handleImageChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {images.length > 0 && (
-              <p className="mt-2 text-sm text-gray-600">{images.length} image(s) selected</p>
+            {newImages.length > 0 && (
+              <p className="mt-2 text-sm text-gray-600">{newImages.length} new image(s) selected</p>
             )}
           </div>
 
@@ -149,7 +194,6 @@ export default function PostItem() {
               <MapPin className="inline h-5 w-5 mr-1" />
               Location Where Found
             </h3>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
@@ -158,11 +202,9 @@ export default function PostItem() {
                   name="found_address"
                   value={formData.found_address}
                   onChange={handleChange}
-                  placeholder="123 Main St"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
                 <input
@@ -170,11 +212,9 @@ export default function PostItem() {
                   name="found_city"
                   value={formData.found_city}
                   onChange={handleChange}
-                  placeholder="Los Angeles"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
                 <input
@@ -182,11 +222,9 @@ export default function PostItem() {
                   name="found_state"
                   value={formData.found_state}
                   onChange={handleChange}
-                  placeholder="California"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
                 <input
@@ -194,11 +232,9 @@ export default function PostItem() {
                   name="found_zip"
                   value={formData.found_zip}
                   onChange={handleChange}
-                  placeholder="90001"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date Found</label>
                 <input
@@ -209,7 +245,6 @@ export default function PostItem() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Latitude (optional)</label>
                 <input
@@ -222,7 +257,6 @@ export default function PostItem() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Longitude (optional)</label>
                 <input
@@ -250,13 +284,22 @@ export default function PostItem() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {loading ? 'Posting...' : 'Post Item'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 py-3 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
