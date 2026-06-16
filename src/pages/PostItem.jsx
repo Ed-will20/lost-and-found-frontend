@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { Upload, MapPin } from 'lucide-react';
 
+const US_STATES = [
+  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
+  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio',
+  'Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota',
+  'Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia',
+  'Wisconsin','Wyoming',
+];
+
 export default function PostItem() {
   const [formData, setFormData] = useState({
     title: '',
@@ -177,14 +188,17 @@ export default function PostItem() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <input
-                  type="text"
+                <select
                   name="found_state"
                   value={formData.found_state}
                   onChange={handleChange}
-                  placeholder="California"
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                >
+                  <option value="">Select state</option>
+                  {US_STATES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

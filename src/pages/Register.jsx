@@ -3,10 +3,22 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus } from 'lucide-react';
 
+const US_STATES = [
+  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
+  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio',
+  'Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota',
+  'Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia',
+  'Wisconsin','Wyoming',
+];
+
 export default function Register() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     full_name: '',
     phone_number: '',
     city: '',
@@ -25,10 +37,16 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
     try {
-      await register(formData);
+      const { confirmPassword, ...payload } = formData;
+      await register(payload);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
@@ -91,6 +109,26 @@ export default function Register() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              required
+              minLength={6}
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                formData.confirmPassword && formData.password !== formData.confirmPassword
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-gray-300'
+              }`}
+            />
+            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+              <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+            )}
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
               type="tel"
@@ -115,13 +153,17 @@ export default function Register() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">State</label>
-              <input
-                type="text"
+              <select
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+              >
+                <option value="">Select state</option>
+                {US_STATES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
             </div>
           </div>
 

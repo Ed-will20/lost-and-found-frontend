@@ -1,28 +1,57 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
-import { MapPin, Calendar, Search, Filter } from 'lucide-react';
+import { MapPin, Calendar, Search, Filter, X } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// Maps abbreviations to full state names for search normalisation
+const STATE_ABBR_MAP = {
+  AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+  CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+  HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
+  KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+  MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+  MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire',
+  NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina',
+  ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania',
+  RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee',
+  TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
+  WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
+};
+
+const US_STATES = Object.values(STATE_ABBR_MAP).sort();
+
+// Normalise whatever the user types into a full state name for the API
+function normaliseState(input) {
+  if (!input) return '';
+  const trimmed = input.trim();
+  const upper = trimmed.toUpperCase();
+  // Check abbreviation match first (e.g. "CA" → "California")
+  if (STATE_ABBR_MAP[upper]) return STATE_ABBR_MAP[upper];
+  // Otherwise return as-is; the API does a case-insensitive ILIKE search
+  return trimmed;
+}
+
+const EMPTY_FILTERS = { search: '', state: '', category: '' };
 
 export default function Home() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    search: '',
-    state: '',
-    city: '',
-    category: '',
-  });
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
 
   useEffect(() => {
-    fetchItems();
+    fetchItems(EMPTY_FILTERS);
   }, []);
 
-  const fetchItems = async () => {
+  const fetchItems = async (activeFilters) => {
     try {
       setLoading(true);
-      const response = await itemsAPI.getAll(filters);
+      const normalisedFilters = {
+        ...activeFilters,
+        state: normaliseState(activeFilters.state),
+      };
+      const response = await itemsAPI.getAll(normalisedFilters);
       setItems(response.data.items);
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -33,8 +62,15 @@ export default function Home() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchItems();
+    fetchItems(filters);
   };
+
+  const handleClear = () => {
+    setFilters(EMPTY_FILTERS);
+    fetchItems(EMPTY_FILTERS);
+  };
+
+  const hasActiveFilters = filters.search || filters.state || filters.category;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -78,6 +114,19 @@ export default function Home() {
                 <option value="jewelry">Jewelry</option>
                 <option value="electronics">Electronics</option>
                 <option value="documents">Documents</option>
+                <option value="clothing">Clothing</option>
+                <option value="shoes">Shoes</option>
+                <option value="bags">Bags</option>
+                <option value="books">Books</option>
+                <option value="id_passport">ID / Passport</option>
+                <option value="glasses">Glasses</option>
+                <option value="headphones">Headphones</option>
+                <option value="bicycle">Bicycle</option>
+                <option value="pet">Pet</option>
+                <option value="luggage">Luggage</option>
+                <option value="sports_equipment">Sports Equipment</option>
+                <option value="umbrella">Umbrella</option>
+                <option value="musical_instrument">Musical Instrument</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -86,7 +135,7 @@ export default function Home() {
               <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
               <input
                 type="text"
-                placeholder="e.g., California"
+                placeholder="e.g., California or CA"
                 value={filters.state}
                 onChange={(e) => setFilters({ ...filters, state: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -94,12 +143,24 @@ export default function Home() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Apply Filters
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Apply Filters
+            </button>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="flex items-center gap-1 px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </button>
+            )}
+          </div>
         </form>
       </div>
 
