@@ -1,11 +1,8 @@
 import axios from 'axios';
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,
 });
-
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -13,14 +10,15 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
-
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   googleAuth: (credential) => api.post('/auth/google', { credential }),
   getProfile: () => api.get('/auth/profile'),
+  uploadProfilePicture: (formData) => api.put('/auth/profile-picture', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
-
 export const itemsAPI = {
   getAll: (params) => api.get('/items', { params }),
   getById: (id) => api.get(`/items/${id}`),
@@ -34,7 +32,6 @@ export const itemsAPI = {
   getMyItems: () => api.get('/items/my-items'),
   searchNearby: (params) => api.get('/items/nearby', { params }),
 };
-
 export const claimsAPI = {
   create: (itemId, data) => api.post(`/items/${itemId}/claim`, data, {
     headers: { 'Content-Type': 'multipart/form-data' }
@@ -46,7 +43,6 @@ export const claimsAPI = {
     rejection_reason: reason || ''
   }),
 };
-
 export const chatsAPI = {
   getMyChats: () => api.get('/chats'),
   getMessages: (chatId) => api.get(`/chats/${chatId}/messages`),
@@ -54,5 +50,4 @@ export const chatsAPI = {
   markRead: (chatId) => api.put(`/chats/${chatId}/read`),
   getUnreadCount: () => api.get('/chats/unread-count'),
 };
-
 export default api;

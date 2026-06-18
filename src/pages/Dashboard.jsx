@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { itemsAPI, claimsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Package, FileText, CheckCircle, XCircle, MessageCircle,
-  Image, Pencil, MapPin, Phone, Mail, Star, Calendar, User
+  Image, Pencil, MapPin, Phone, Mail, Star, Calendar, User, Camera
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/config';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, updateProfilePicture } = useAuth();
   const navigate = useNavigate();
   const [myItems, setMyItems] = useState([]);
   const [myClaims, setMyClaims] = useState([]);
@@ -20,6 +20,9 @@ export default function Dashboard() {
   const [rejectingClaimId, setRejectingClaimId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [lightboxImg, setLightboxImg] = useState(null);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -73,6 +76,37 @@ export default function Dashboard() {
     }
   };
 
+  const handlePictureClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePictureChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError('');
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image must be smaller than 5MB.');
+      return;
+    }
+
+    setUploadingPicture(true);
+    try {
+      await updateProfilePicture(file);
+    } catch (error) {
+      setUploadError('Failed to upload picture. Please try again.');
+      console.error('Profile picture upload error:', error);
+    } finally {
+      setUploadingPicture(false);
+      e.target.value = '';
+    }
+  };
+
   const successfulReturns = myClaims.filter(c => c.status === 'approved').length;
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -97,18 +131,50 @@ export default function Dashboard() {
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
 
-          {/* Avatar */}
+          {/* Avatar with upload control */}
           <div className="relative flex-shrink-0">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={user?.full_name}
-                className="h-20 w-20 rounded-full object-cover ring-4 ring-blue-100"
-              />
-            ) : (
-              <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center ring-4 ring-blue-50">
-                <User className="h-10 w-10 text-blue-400" />
-              </div>
+            <button
+              type="button"
+              onClick={handlePictureClick}
+              disabled={uploadingPicture}
+              className="relative block rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-wait"
+              title="Change profile picture"
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={user?.full_name}
+                  className="h-20 w-20 rounded-full object-cover ring-4 ring-blue-100"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center ring-4 ring-blue-50">
+                  <User className="h-10 w-10 text-blue-400" />
+                </div>
+              )}
+
+              {/* Camera icon overlay */}
+              <span className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-blue-600 flex items-center justify-center ring-2 ring-white">
+                <Camera className="h-3.5 w-3.5 text-white" />
+              </span>
+
+              {/* Loading overlay */}
+              {uploadingPicture && (
+                <span className="absolute inset-0 rounded-full bg-black bg-opacity-40 flex items-center justify-center">
+                  <span className="animate-spin rounded-full h-6 w-6 border-2 border-white border-b-transparent"></span>
+                </span>
+              )}
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePictureChange}
+              className="hidden"
+            />
+
+            {uploadError && (
+              <p className="absolute top-full mt-1 w-40 text-xs text-red-600">{uploadError}</p>
             )}
           </div>
 
