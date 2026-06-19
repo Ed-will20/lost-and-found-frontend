@@ -4,7 +4,7 @@ import { itemsAPI, claimsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Package, FileText, CheckCircle, XCircle, MessageCircle,
-  Image, Pencil, MapPin, Phone, Mail, Star, Calendar, User, Camera
+  Image, Pencil, Trash2, MapPin, Phone, Mail, Star, Calendar, User, Camera
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/config';
 
@@ -23,6 +23,10 @@ export default function Dashboard() {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
+
+  const [deletingItemId, setDeletingItemId] = useState(null); // item pending confirm
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -104,6 +108,26 @@ export default function Dashboard() {
     } finally {
       setUploadingPicture(false);
       e.target.value = '';
+    }
+  };
+
+  const handleDeleteClick = (itemId) => {
+    setDeleteError('');
+    setDeletingItemId(itemId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingItemId) return;
+    setDeleteError('');
+    setDeleteLoading(true);
+    try {
+      await itemsAPI.delete(deletingItemId);
+      setDeletingItemId(null);
+      fetchData();
+    } catch (error) {
+      setDeleteError(error.response?.data?.error || 'Failed to delete item. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -264,6 +288,11 @@ export default function Dashboard() {
                     </Link>
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        item.post_type === 'lost' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {item.post_type === 'lost' ? 'LOST' : 'FOUND'}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         item.status === 'found' ? 'bg-green-100 text-green-800' :
                         item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800'
@@ -276,6 +305,13 @@ export default function Dashboard() {
                       >
                         <Pencil className="h-3 w-3" />
                         Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(item.id)}
+                        className="flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-red-600 border border-red-200 rounded hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -463,6 +499,40 @@ export default function Dashboard() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingItemId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete this item?</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              This will permanently remove the post. This can't be undone.
+            </p>
+
+            {deleteError && (
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded text-sm">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDeletingItemId(null); setDeleteError(''); }}
+                className="flex-1 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteLoading}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
