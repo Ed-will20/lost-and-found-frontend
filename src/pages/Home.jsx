@@ -36,20 +36,25 @@ function normaliseState(input) {
 const EMPTY_FILTERS = { search: '', state: '', category: '' };
 
 export default function Home() {
+  const [postType, setPostType] = useState('found'); // 'found' | 'lost'
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
 
-  useEffect(() => {
-    fetchItems(EMPTY_FILTERS);
-  }, []);
+  const isLost = postType === 'lost';
 
-  const fetchItems = async (activeFilters) => {
+  useEffect(() => {
+    fetchItems(EMPTY_FILTERS, postType);
+    setFilters(EMPTY_FILTERS);
+  }, [postType]);
+
+  const fetchItems = async (activeFilters, activePostType) => {
     try {
       setLoading(true);
       const normalisedFilters = {
         ...activeFilters,
         state: normaliseState(activeFilters.state),
+        post_type: activePostType,
       };
       const response = await itemsAPI.getAll(normalisedFilters);
       setItems(response.data.items);
@@ -62,12 +67,12 @@ export default function Home() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchItems(filters);
+    fetchItems(filters, postType);
   };
 
   const handleClear = () => {
     setFilters(EMPTY_FILTERS);
-    fetchItems(EMPTY_FILTERS);
+    fetchItems(EMPTY_FILTERS, postType);
   };
 
   const hasActiveFilters = filters.search || filters.state || filters.category;
@@ -77,6 +82,30 @@ export default function Home() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Lost & Found Items</h1>
         <p className="text-lg text-gray-600">Help reunite people with their belongings</p>
+      </div>
+
+      {/* Lost / Found tabs */}
+      <div className="mb-8 flex gap-2 border-b border-gray-200">
+        <button
+          onClick={() => setPostType('found')}
+          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+            !isLost
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Found Items
+        </button>
+        <button
+          onClick={() => setPostType('lost')}
+          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-colors ${
+            isLost
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Lost Items
+        </button>
       </div>
 
       {/* Search and Filters */}
@@ -172,7 +201,11 @@ export default function Home() {
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-600 text-lg">No items found. Try adjusting your filters.</p>
+          <p className="text-gray-600 text-lg">
+            {isLost
+              ? 'No lost items posted yet. Try adjusting your filters.'
+              : 'No found items posted yet. Try adjusting your filters.'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -208,7 +241,12 @@ export default function Home() {
                   <span>{new Date(item.found_date).toLocaleDateString()}</span>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-3 flex gap-2">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                    item.post_type === 'lost' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {item.post_type === 'lost' ? 'LOST' : 'FOUND'}
+                  </span>
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                     item.status === 'found' ? 'bg-green-100 text-green-800' :
                     item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :

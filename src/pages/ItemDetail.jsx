@@ -52,11 +52,15 @@ export default function ItemDetail() {
       });
 
       await claimsAPI.create(id, formData);
-      setMessage('Claim submitted successfully! The finder will review it.');
+      setMessage(
+        isLost
+          ? 'Submitted! The owner will review your proof and reach out if it matches.'
+          : 'Claim submitted successfully! The finder will review it.'
+      );
       setShowClaimForm(false);
       setClaimData({ proof_description: '', proof_images: [] });
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Failed to submit claim');
+      setMessage(error.response?.data?.error || 'Failed to submit');
     } finally {
       setSubmitting(false);
     }
@@ -78,6 +82,7 @@ export default function ItemDetail() {
     );
   }
 
+  const isLost = item.post_type === 'lost';
   const isOwner = user && user.id === item.user_id;
 
   return (
@@ -124,7 +129,12 @@ export default function ItemDetail() {
 
           {/* Details */}
           <div className="md:w-1/2 p-8">
-            <div className="mb-4">
+            <div className="mb-4 flex gap-2">
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                isLost ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+              }`}>
+                {isLost ? 'LOST' : 'FOUND'}
+              </span>
               <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                 item.status === 'found' ? 'bg-green-100 text-green-800' :
                 item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :
@@ -135,12 +145,12 @@ export default function ItemDetail() {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{item.title}</h1>
-            
+
             <div className="space-y-3 mb-6">
               <div className="flex items-start text-gray-600">
                 <MapPin className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">Found at:</p>
+                  <p className="font-medium">{isLost ? 'Last seen at:' : 'Found at:'}</p>
                   <p>{item.found_address}</p>
                   <p>{item.found_city}, {item.found_state} {item.found_zip}</p>
                 </div>
@@ -148,7 +158,7 @@ export default function ItemDetail() {
 
               <div className="flex items-center text-gray-600">
                 <Calendar className="h-5 w-5 mr-2" />
-                <p>Found on {new Date(item.found_date).toLocaleDateString()}</p>
+                <p>{isLost ? 'Lost on' : 'Found on'} {new Date(item.found_date).toLocaleDateString()}</p>
               </div>
 
               <div className="flex items-center text-gray-600">
@@ -178,7 +188,7 @@ export default function ItemDetail() {
               </div>
             )}
 
-            {/* Claim Button */}
+            {/* Claim / Respond Button */}
             {!isOwner && item.status === 'found' && (
               <div>
                 {!showClaimForm ? (
@@ -186,23 +196,29 @@ export default function ItemDetail() {
                     onClick={() => user ? setShowClaimForm(true) : navigate('/login')}
                     className="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    Claim This Item
+                    {isLost ? 'I Found This Item' : 'Claim This Item'}
                   </button>
                 ) : (
                   <div className="border-t pt-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Submit Claim</h3>
-                    
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                      {isLost ? 'Tell the Owner You Found It' : 'Submit Claim'}
+                    </h3>
+
                     <form onSubmit={handleClaimSubmit} className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Proof of Ownership *
+                          {isLost ? 'Proof You Have This Item *' : 'Proof of Ownership *'}
                         </label>
                         <textarea
                           required
                           rows={4}
                           value={claimData.proof_description}
                           onChange={(e) => setClaimData({ ...claimData, proof_description: e.target.value })}
-                          placeholder="Describe how you can prove this item is yours..."
+                          placeholder={
+                            isLost
+                              ? "Describe identifying details only the owner would recognize, and where/when you found it..."
+                              : "Describe how you can prove this item is yours..."
+                          }
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -226,7 +242,7 @@ export default function ItemDetail() {
                           disabled={submitting}
                           className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                         >
-                          {submitting ? 'Submitting...' : 'Submit Claim'}
+                          {submitting ? 'Submitting...' : (isLost ? 'Submit' : 'Submit Claim')}
                         </button>
                         <button
                           type="button"
@@ -244,7 +260,7 @@ export default function ItemDetail() {
 
             {message && (
               <div className={`mt-4 p-4 rounded ${
-                message.includes('success') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                message.includes('success') || message.includes('Submitted') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
               }`}>
                 {message}
               </div>

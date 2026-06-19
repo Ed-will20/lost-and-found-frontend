@@ -18,6 +18,7 @@ const US_STATES = [
 export default function EditItem() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [postType, setPostType] = useState('found'); // 'found' | 'lost'
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -37,6 +38,8 @@ export default function EditItem() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
+  const isLost = postType === 'lost';
+
   useEffect(() => {
     const fetchItem = async () => {
       try {
@@ -55,6 +58,7 @@ export default function EditItem() {
           found_date: item.found_date ? item.found_date.split('T')[0] : '',
           tags: Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''),
         });
+        setPostType(item.post_type === 'lost' ? 'lost' : 'found');
         setExistingImages(item.images || []);
       } catch (err) {
         setError('Failed to load item');
@@ -80,6 +84,7 @@ export default function EditItem() {
     try {
       const data = new FormData();
       Object.keys(formData).forEach(key => data.append(key, formData[key]));
+      data.append('post_type', postType);
       newImages.forEach(img => data.append('images', img));
       await itemsAPI.update(id, data);
       navigate('/dashboard');
@@ -101,7 +106,38 @@ export default function EditItem() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Item</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          Edit {isLost ? 'Lost' : 'Found'} Item
+        </h1>
+
+        {/* Lost / Found toggle */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">What is this post?</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setPostType('found')}
+              className={`py-3 px-4 rounded-md border text-sm font-medium transition-colors ${
+                !isLost
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Found Item
+            </button>
+            <button
+              type="button"
+              onClick={() => setPostType('lost')}
+              className={`py-3 px-4 rounded-md border text-sm font-medium transition-colors ${
+                isLost
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Lost Item
+            </button>
+          </div>
+        </div>
 
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
@@ -203,7 +239,7 @@ export default function EditItem() {
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               <MapPin className="inline h-5 w-5 mr-1" />
-              Location Where Found
+              {isLost ? 'Last Seen Location' : 'Location Where Found'}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -251,7 +287,9 @@ export default function EditItem() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date Found</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {isLost ? 'Date Lost' : 'Date Found'}
+                </label>
                 <input
                   type="date"
                   name="found_date"
