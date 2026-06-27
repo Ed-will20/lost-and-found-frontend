@@ -15,19 +15,11 @@ const US_STATES = [
 ];
 
 export default function PostItem() {
-  const [postType, setPostType] = useState('found'); // 'found' | 'lost'
+  const [postType, setPostType] = useState('found');
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    found_address: '',
-    found_city: '',
-    found_state: '',
-    found_zip: '',
-    found_lat: '',
-    found_lng: '',
-    found_date: '',
-    tags: '',
+    title: '', description: '', category: '',
+    found_address: '', found_city: '', found_state: '',
+    found_zip: '', found_date: '', tags: '',
   });
   const [images, setImages] = useState([]);
   const [error, setError] = useState('');
@@ -36,33 +28,22 @@ export default function PostItem() {
 
   const isLost = postType === 'lost';
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleImageChange = (e) => {
-    setImages(Array.from(e.target.files));
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleImageChange = (e) => setImages(Array.from(e.target.files));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
     if (images.length === 0) {
       setError(`Please upload at least one image ${isLost ? 'to help others recognize the item' : 'of the item'}.`);
       return;
     }
-
     setLoading(true);
     try {
       const data = new FormData();
-      Object.keys(formData).forEach(key => {
-        data.append(key, formData[key]);
-      });
+      Object.keys(formData).forEach(key => data.append(key, formData[key]));
       data.append('post_type', postType);
-      images.forEach(image => {
-        data.append('images', image);
-      });
+      images.forEach(image => data.append('images', image));
       await itemsAPI.create(data);
       navigate('/dashboard');
     } catch (err) {
@@ -73,9 +54,9 @@ export default function PostItem() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="bg-white rounded-xl shadow-md p-5 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
           Post {isLost ? 'Lost' : 'Found'} Item
         </h1>
 
@@ -86,10 +67,8 @@ export default function PostItem() {
             <button
               type="button"
               onClick={() => setPostType('found')}
-              className={`py-3 px-4 rounded-md border text-sm font-medium transition-colors ${
-                !isLost
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              className={`py-3 px-4 rounded-lg border text-sm font-medium transition-colors ${
+                !isLost ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
               I Found an Item
@@ -97,10 +76,8 @@ export default function PostItem() {
             <button
               type="button"
               onClick={() => setPostType('lost')}
-              className={`py-3 px-4 rounded-md border text-sm font-medium transition-colors ${
-                isLost
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              className={`py-3 px-4 rounded-lg border text-sm font-medium transition-colors ${
+                isLost ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
               I Lost an Item
@@ -109,12 +86,12 @@ export default function PostItem() {
         </div>
 
         {error && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
             <input
@@ -124,7 +101,7 @@ export default function PostItem() {
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Brown Leather Wallet"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
@@ -137,7 +114,7 @@ export default function PostItem() {
               value={formData.description}
               onChange={handleChange}
               placeholder={isLost ? "Describe the item and any identifying details..." : "Describe the item in detail..."}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
@@ -147,7 +124,7 @@ export default function PostItem() {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="">Select category</option>
               <option value="wallet">Wallet</option>
@@ -183,21 +160,21 @@ export default function PostItem() {
               accept="image/*"
               multiple
               onChange={handleImageChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {images.length > 0 && (
               <p className="mt-2 text-sm text-gray-600">{images.length} image(s) selected</p>
             )}
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              <MapPin className="inline h-5 w-5 mr-1" />
+          {/* Location */}
+          <div className="border-t pt-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
               {isLost ? 'Last Seen Location' : 'Location Where Found'}
             </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+            <div className="space-y-3">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                 <input
                   type="text"
@@ -205,89 +182,63 @@ export default function PostItem() {
                   value={formData.found_address}
                   onChange={handleChange}
                   placeholder="123 Main St"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <input
-                  type="text"
-                  name="found_city"
-                  value={formData.found_city}
-                  onChange={handleChange}
-                  placeholder="Los Angeles"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    name="found_city"
+                    value={formData.found_city}
+                    onChange={handleChange}
+                    placeholder="Los Angeles"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <select
+                    name="found_state"
+                    value={formData.found_state}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <option value="">State</option>
+                    {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <select
-                  name="found_state"
-                  value={formData.found_state}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select state</option>
-                  {US_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-                <input
-                  type="text"
-                  name="found_zip"
-                  value={formData.found_zip}
-                  onChange={handleChange}
-                  placeholder="90001"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {isLost ? 'Date Lost' : 'Date Found'}
-                </label>
-                <input
-                  type="date"
-                  name="found_date"
-                  value={formData.found_date}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Latitude (optional)</label>
-                <input
-                  type="number"
-                  step="any"
-                  name="found_lat"
-                  value={formData.found_lat}
-                  onChange={handleChange}
-                  placeholder="34.0522"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Longitude (optional)</label>
-                <input
-                  type="number"
-                  step="any"
-                  name="found_lng"
-                  value={formData.found_lng}
-                  onChange={handleChange}
-                  placeholder="-118.2437"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                  <input
+                    type="text"
+                    name="found_zip"
+                    value={formData.found_zip}
+                    onChange={handleChange}
+                    placeholder="90001"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {isLost ? 'Date Lost' : 'Date Found'}
+                  </label>
+                  <input
+                    type="date"
+                    name="found_date"
+                    value={formData.found_date}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Removed lat/lng fields — confusing for regular users on mobile */}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
@@ -297,14 +248,14 @@ export default function PostItem() {
               value={formData.tags}
               onChange={handleChange}
               placeholder="wallet, brown, leather"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full py-3 px-4 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
             {loading ? 'Posting...' : `Post ${isLost ? 'Lost' : 'Found'} Item`}
           </button>
