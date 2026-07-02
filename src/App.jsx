@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -10,6 +11,8 @@ import ItemDetail from './pages/ItemDetail';
 import Dashboard from './pages/Dashboard';
 import Chat from './pages/Chat';
 import Chats from './pages/Chats';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -20,19 +23,24 @@ const ProtectedRoute = ({ children }) => {
 function AppContent() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/items/:id" element={<ItemDetail />} />
-          <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
-          <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/chats/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
-        </Routes>
+        <main className="flex-1">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/items/:id" element={<ItemDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
+            <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/chats/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
+          </Routes>
+        </main>
+        <Footer />
       </div>
     </Router>
   );
