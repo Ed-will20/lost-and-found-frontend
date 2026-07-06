@@ -151,7 +151,7 @@ export default function ItemDetail() {
                 item.status === 'claimed' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {item.status.toUpperCase()}
+                {item.status === 'found' ? 'ACTIVE' : item.status.toUpperCase()}
               </span>
             </div>
 
