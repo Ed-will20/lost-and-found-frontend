@@ -102,6 +102,12 @@ export default function Home() {
         </button>
       </div>
 
+      <p className="text-sm text-gray-500 mb-4">
+        {isLost
+          ? 'These are items other people are actively looking for. If you've found one, open it and let them know.'
+          : 'These are items other people found and are holding onto. If one matches something you lost, open it and submit proof to claim it.'}
+      </p>
+
       {/* Search bar + filter toggle */}
       <div className="mb-4">
         <form onSubmit={handleSearch} className="flex gap-2">

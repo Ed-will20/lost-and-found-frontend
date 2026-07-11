@@ -59,6 +59,11 @@ export default function PostItem() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
           Post {isLost ? 'Lost' : 'Found'} Item
         </h1>
+        <p className="text-sm text-gray-500 mb-6">
+          {isLost
+            ? 'Posting a lost item lets others browse it and, if they find it, submit proof and connect with you to arrange the return.'
+            : "Posting a found item creates a listing others can browse and submit proof to claim. You'll review claims and approve the one with the best proof."}
+        </p>
 
         {/* Lost / Found toggle */}
         <div className="mb-6">

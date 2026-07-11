@@ -13,6 +13,7 @@ import Chat from './pages/Chat';
 import Chats from './pages/Chats';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -33,6 +34,7 @@ function AppContent() {
             <Route path="/items/:id" element={<ItemDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
             <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
