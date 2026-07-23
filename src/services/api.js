@@ -13,7 +13,7 @@ api.interceptors.request.use((config) => {
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
-  googleAuth: (credential) => api.post('/auth/google', { credential }),
+  googleAuth: (credential, referral_source) => api.post('/auth/google', { credential, referral_source }),
   getProfile: () => api.get('/auth/profile'),
   uploadProfilePicture: (formData) => api.put('/auth/profile-picture', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
