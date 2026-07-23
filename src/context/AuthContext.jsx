@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
   const loginWithGoogle = async (credential, referral_source) => {
-    const response = await authAPI.googleAuth({ credential, referral_source: referral_source || null });
+    const response = await authAPI.googleAuth(credential, referral_source || null);
     localStorage.setItem('token', response.data.token);
     setUser(response.data.user);
     return response.data;
