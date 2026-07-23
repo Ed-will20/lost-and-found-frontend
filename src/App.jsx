@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -22,6 +23,14 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref && !localStorage.getItem('eyefoundyou_referral')) {
+      localStorage.setItem('eyefoundyou_referral', ref);
+    }
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">

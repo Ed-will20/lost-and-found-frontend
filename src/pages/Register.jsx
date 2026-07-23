@@ -47,7 +47,9 @@ export default function Register() {
     setLoading(true);
     try {
       const { confirmPassword, ...payload } = formData;
-      await register(payload);
+      const referral_source = localStorage.getItem('eyefoundyou_referral') || null;
+      await register({ ...payload, referral_source });
+      localStorage.removeItem('eyefoundyou_referral');
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
@@ -59,7 +61,9 @@ export default function Register() {
   const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
     try {
-      await loginWithGoogle(credentialResponse.credential);
+      const referral_source = localStorage.getItem('eyefoundyou_referral') || null;
+      await loginWithGoogle(credentialResponse.credential, referral_source);
+      localStorage.removeItem('eyefoundyou_referral');
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Google sign-in failed');
