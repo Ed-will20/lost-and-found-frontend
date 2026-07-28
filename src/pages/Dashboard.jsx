@@ -166,6 +166,12 @@ export default function Dashboard() {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{user?.full_name}</h1>
+              {user?.school_verified && (
+                <div className="flex-shrink-0 flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-xl px-3 py-1">
+                  <span className="text-sm">🎓</span>
+                  <span className="text-sm font-semibold text-blue-700">Verified Student</span>
+                </div>
+              )}
               {user?.rating != null && (
                 <div className="flex-shrink-0 flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-1">
                   <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
