@@ -28,6 +28,7 @@ function normaliseState(input) {
 }
 
 const EMPTY_FILTERS = { search: '', state: '', category: '' };
+const RADIUS_OPTIONS = [5, 10, 25, 50];
 
 export default function Home() {
   const [postType, setPostType] = useState('found');
@@ -39,16 +40,18 @@ export default function Home() {
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const [coords, setCoords] = useState(null);
+  const [radius, setRadius] = useState(25);
 
   const isLost = postType === 'lost';
 
   useEffect(() => {
     if (nearMe && coords) {
-      fetchNearby(coords, postType);
+      fetchNearby(coords, postType, filters, radius);
     } else {
       fetchItems(EMPTY_FILTERS, postType);
       setFilters(EMPTY_FILTERS);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postType]);
 
   const fetchItems = async (activeFilters, activePostType) => {
@@ -68,14 +71,17 @@ export default function Home() {
     }
   };
 
-  const fetchNearby = async (activeCoords, activePostType, radius = 25) => {
+  const fetchNearby = async (activeCoords, activePostType, activeFilters, activeRadius) => {
     try {
       setLoading(true);
       const response = await itemsAPI.searchNearby({
         lat: activeCoords.lat,
         lng: activeCoords.lng,
-        radius,
+        radius: activeRadius,
         post_type: activePostType,
+        search: activeFilters.search || undefined,
+        category: activeFilters.category || undefined,
+        state: normaliseState(activeFilters.state) || undefined,
       });
       setItems(response.data.items);
     } catch (error) {
@@ -87,7 +93,7 @@ export default function Home() {
 
   const handleToggleNearMe = () => {
     if (nearMe) {
-      // Turning off — go back to normal browse
+      // Turning off — go back to normal browse with current filters
       setNearMe(false);
       setLocationError('');
       fetchItems(filters, postType);
@@ -110,7 +116,7 @@ export default function Home() {
         setCoords(newCoords);
         setNearMe(true);
         setLocating(false);
-        fetchNearby(newCoords, postType);
+        fetchNearby(newCoords, postType, filters, radius);
       },
       (err) => {
         setLocating(false);
@@ -124,11 +130,18 @@ export default function Home() {
     );
   };
 
+  const handleRadiusChange = (e) => {
+    const newRadius = parseInt(e.target.value, 10);
+    setRadius(newRadius);
+    if (nearMe && coords) {
+      fetchNearby(coords, postType, filters, newRadius);
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    if (nearMe) {
-      // Near-me mode ignores text/category/state filters — it's radius-based
-      fetchNearby(coords, postType);
+    if (nearMe && coords) {
+      fetchNearby(coords, postType, filters, radius);
     } else {
       fetchItems(filters, postType);
     }
@@ -137,7 +150,11 @@ export default function Home() {
 
   const handleClear = () => {
     setFilters(EMPTY_FILTERS);
-    fetchItems(EMPTY_FILTERS, postType);
+    if (nearMe && coords) {
+      fetchNearby(coords, postType, EMPTY_FILTERS, radius);
+    } else {
+      fetchItems(EMPTY_FILTERS, postType);
+    }
   };
 
   const hasActiveFilters = filters.search || filters.state || filters.category;
@@ -179,7 +196,7 @@ export default function Home() {
 
       {/* Search bar + filter toggle + near me */}
       <div className="mb-4">
-        <div className="flex gap-2 mb-2">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
           <button
             type="button"
             onClick={handleToggleNearMe}
@@ -193,8 +210,21 @@ export default function Home() {
             <LocateFixed className="h-4 w-4" />
             {locating ? 'Locating...' : nearMe ? 'Near Me: On' : 'Near Me'}
           </button>
+
+          {nearMe && (
+            <select
+              value={radius}
+              onChange={handleRadiusChange}
+              className="px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {RADIUS_OPTIONS.map((r) => (
+                <option key={r} value={r}>Within {r} miles</option>
+              ))}
+            </select>
+          )}
+
           {locationError && (
-            <p className="text-xs text-red-600 self-center">{locationError}</p>
+            <p className="text-xs text-red-600">{locationError}</p>
           )}
         </div>
 
@@ -203,18 +233,16 @@ export default function Home() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder={nearMe ? 'Text search is off while Near Me is on' : 'Search items...'}
+              placeholder="Search items..."
               value={filters.search}
-              disabled={nearMe}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            disabled={nearMe}
-            className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-md text-sm font-medium transition-colors disabled:opacity-50 ${
+            className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-md text-sm font-medium transition-colors ${
               showFilters || hasActiveFilters
                 ? 'bg-blue-50 border-blue-300 text-blue-700'
                 : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -232,8 +260,14 @@ export default function Home() {
           </button>
         </form>
 
+        {nearMe && (
+          <p className="mt-1 text-xs text-gray-500">
+            Near Me only shows items posted with a picked address (via address search), not manually-entered locations.
+          </p>
+        )}
+
         {/* Expandable filters */}
-        {showFilters && !nearMe && (
+        {showFilters && (
           <div className="mt-3 p-4 bg-white rounded-lg shadow-md border border-gray-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
@@ -310,7 +344,7 @@ export default function Home() {
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <p className="text-gray-600">
             {nearMe
-              ? `No ${isLost ? 'lost' : 'found'} items nearby yet. Try turning off Near Me to browse everything.`
+              ? `No ${isLost ? 'lost' : 'found'} items within ${radius} miles yet. Try a wider radius or turning off Near Me.`
               : isLost ? 'No lost items posted yet. Try adjusting your filters.' : 'No found items posted yet. Try adjusting your filters.'}
           </p>
         </div>

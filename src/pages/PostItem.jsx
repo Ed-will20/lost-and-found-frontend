@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { Upload, MapPin } from 'lucide-react';
 
+const US_STATES = [
+  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
+  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio',
+  'Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota',
+  'Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia',
+  'Wisconsin','Wyoming',
+];
+
 export default function PostItem() {
   const [postType, setPostType] = useState('found');
   const [formData, setFormData] = useState({
@@ -15,6 +26,7 @@ export default function PostItem() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mapsReady, setMapsReady] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
   const navigate = useNavigate();
 
   const addressInputRef = useRef(null);
@@ -25,6 +37,7 @@ export default function PostItem() {
   // Poll for the Google Maps script (loaded via index.html) since load timing
   // isn't guaranteed relative to React mounting.
   useEffect(() => {
+    if (manualMode) return;
     if (window.google && window.google.maps && window.google.maps.places) {
       setMapsReady(true);
       return;
@@ -36,11 +49,11 @@ export default function PostItem() {
       }
     }, 300);
     return () => clearInterval(interval);
-  }, []);
+  }, [manualMode]);
 
   // Wire up Autocomplete once the script is ready and the input exists
   useEffect(() => {
-    if (!mapsReady || !addressInputRef.current || autocompleteRef.current) return;
+    if (manualMode || !mapsReady || !addressInputRef.current || autocompleteRef.current) return;
 
     autocompleteRef.current = new window.google.maps.places.Autocomplete(
       addressInputRef.current,
@@ -76,10 +89,40 @@ export default function PostItem() {
         found_lng: lng !== undefined ? String(lng) : '',
       }));
     });
-  }, [mapsReady]);
+  }, [mapsReady, manualMode]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleImageChange = (e) => setImages(Array.from(e.target.files));
+
+  const handleSwitchToManual = () => {
+    // Clear anything Autocomplete may have already set, and drop lat/lng
+    // since manual entry has no coordinates.
+    setFormData((prev) => ({
+      ...prev,
+      found_address: '',
+      found_city: '',
+      found_state: '',
+      found_zip: '',
+      found_lat: '',
+      found_lng: '',
+    }));
+    autocompleteRef.current = null;
+    setManualMode(true);
+  };
+
+  const handleSwitchToAutocomplete = () => {
+    setFormData((prev) => ({
+      ...prev,
+      found_address: '',
+      found_city: '',
+      found_state: '',
+      found_zip: '',
+      found_lat: '',
+      found_lng: '',
+    }));
+    autocompleteRef.current = null;
+    setManualMode(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -222,53 +265,118 @@ export default function PostItem() {
             )}
           </div>
 
-          {/* Location — now via Google Places Autocomplete */}
+          {/* Location — Autocomplete by default, with manual fallback */}
           <div className="border-t pt-5">
-            <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              {isLost ? 'Last Seen Location' : 'Location Where Found'}
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Search for an address
-                </label>
-                <input
-                  type="text"
-                  ref={addressInputRef}
-                  defaultValue={formData.found_address}
-                  placeholder={mapsReady ? 'Start typing an address...' : 'Loading address search...'}
-                  disabled={!mapsReady}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Pick an address from the dropdown so the location saves correctly.
-                </p>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-gray-900 flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {isLost ? 'Last Seen Location' : 'Location Where Found'}
+              </h3>
+              <button
+                type="button"
+                onClick={manualMode ? handleSwitchToAutocomplete : handleSwitchToManual}
+                className="text-xs font-medium text-blue-600 hover:text-blue-800 underline"
+              >
+                {manualMode ? 'Use address search instead' : "Can't find your address? Enter manually"}
+              </button>
+            </div>
 
-              {/* Read-only confirmation of what was picked, so users can see it worked */}
-              {(formData.found_city || formData.found_state) && (
-                <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                  {formData.found_address && <div>{formData.found_address}</div>}
+            {!manualMode ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Search for an address
+                  </label>
+                  <input
+                    type="text"
+                    ref={addressInputRef}
+                    defaultValue={formData.found_address}
+                    placeholder={mapsReady ? 'Start typing an address...' : 'Loading address search...'}
+                    disabled={!mapsReady}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Pick an address from the dropdown so the location saves correctly.
+                  </p>
+                </div>
+
+                {/* Read-only confirmation of what was picked, so users can see it worked */}
+                {(formData.found_city || formData.found_state) && (
+                  <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                    {formData.found_address && <div>{formData.found_address}</div>}
+                    <div>
+                      {formData.found_city}{formData.found_city && formData.found_state ? ', ' : ''}
+                      {formData.found_state} {formData.found_zip}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-gray-500 -mt-1">
+                  Manual entry won't pin an exact map location, but the item will still show up in city/state search.
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input
+                    type="text"
+                    name="found_address"
+                    value={formData.found_address}
+                    onChange={handleChange}
+                    placeholder="123 Main St"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    {formData.found_city}{formData.found_city && formData.found_state ? ', ' : ''}
-                    {formData.found_state} {formData.found_zip}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                    <input
+                      type="text"
+                      name="found_city"
+                      value={formData.found_city}
+                      onChange={handleChange}
+                      placeholder="Los Angeles"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                    <select
+                      name="found_state"
+                      value={formData.found_state}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    >
+                      <option value="">State</option>
+                      {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
                 </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {isLost ? 'Date Lost' : 'Date Found'}
-                </label>
-                <input
-                  type="date"
-                  name="found_date"
-                  value={formData.found_date}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                  <input
+                    type="text"
+                    name="found_zip"
+                    value={formData.found_zip}
+                    onChange={handleChange}
+                    placeholder="90001"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
               </div>
+            )}
+
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {isLost ? 'Date Lost' : 'Date Found'}
+              </label>
+              <input
+                type="date"
+                name="found_date"
+                value={formData.found_date}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
             </div>
           </div>
 
