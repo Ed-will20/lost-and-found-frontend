@@ -103,6 +103,15 @@ export default function Register() {
           </div>
         </div>
 
+        <div className="mb-5 flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
+          <span className="text-base leading-none mt-0.5">🎓</span>
+          <p className="text-xs text-blue-800 leading-relaxed">
+            Have a student email? Register with it below to get a Verified Student badge.
+            Some schools use Microsoft for student accounts, so Google sign-in above may not
+            find your school email, but registering here works with any email.
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Full Name</label>
