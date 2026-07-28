@@ -74,7 +74,6 @@ export default function Login() {
             Registered with a student email? Sign in with email below, not Google —
             some schools use Microsoft for student accounts, so Google may not find it.
           </p>
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
