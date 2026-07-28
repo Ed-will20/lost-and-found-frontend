@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
-import { MapPin, Calendar, Search, Filter, X } from 'lucide-react';
+import { MapPin, Calendar, Search, Filter, X, LocateFixed } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -35,12 +35,20 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
+  const [nearMe, setNearMe] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [coords, setCoords] = useState(null);
 
   const isLost = postType === 'lost';
 
   useEffect(() => {
-    fetchItems(EMPTY_FILTERS, postType);
-    setFilters(EMPTY_FILTERS);
+    if (nearMe && coords) {
+      fetchNearby(coords, postType);
+    } else {
+      fetchItems(EMPTY_FILTERS, postType);
+      setFilters(EMPTY_FILTERS);
+    }
   }, [postType]);
 
   const fetchItems = async (activeFilters, activePostType) => {
@@ -60,9 +68,70 @@ export default function Home() {
     }
   };
 
+  const fetchNearby = async (activeCoords, activePostType, radius = 25) => {
+    try {
+      setLoading(true);
+      const response = await itemsAPI.searchNearby({
+        lat: activeCoords.lat,
+        lng: activeCoords.lng,
+        radius,
+        post_type: activePostType,
+      });
+      setItems(response.data.items);
+    } catch (error) {
+      console.error('Error fetching nearby items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleNearMe = () => {
+    if (nearMe) {
+      // Turning off — go back to normal browse
+      setNearMe(false);
+      setLocationError('');
+      fetchItems(filters, postType);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocationError('Location search is not supported in this browser.');
+      return;
+    }
+
+    setLocating(true);
+    setLocationError('');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newCoords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setCoords(newCoords);
+        setNearMe(true);
+        setLocating(false);
+        fetchNearby(newCoords, postType);
+      },
+      (err) => {
+        setLocating(false);
+        setLocationError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. Enable it in your browser settings to use Near Me.'
+            : 'Could not get your location. Please try again.'
+        );
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchItems(filters, postType);
+    if (nearMe) {
+      // Near-me mode ignores text/category/state filters — it's radius-based
+      fetchNearby(coords, postType);
+    } else {
+      fetchItems(filters, postType);
+    }
     setShowFilters(false);
   };
 
@@ -108,23 +177,44 @@ export default function Home() {
           : 'These are items other people found and are holding onto. If one matches something you lost, open it and submit proof to claim it.'}
       </p>
 
-      {/* Search bar + filter toggle */}
+      {/* Search bar + filter toggle + near me */}
       <div className="mb-4">
+        <div className="flex gap-2 mb-2">
+          <button
+            type="button"
+            onClick={handleToggleNearMe}
+            disabled={locating}
+            className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-md text-sm font-medium transition-colors ${
+              nearMe
+                ? 'bg-blue-600 border-blue-600 text-white'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            } disabled:opacity-50`}
+          >
+            <LocateFixed className="h-4 w-4" />
+            {locating ? 'Locating...' : nearMe ? 'Near Me: On' : 'Near Me'}
+          </button>
+          {locationError && (
+            <p className="text-xs text-red-600 self-center">{locationError}</p>
+          )}
+        </div>
+
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder={nearMe ? 'Text search is off while Near Me is on' : 'Search items...'}
               value={filters.search}
+              disabled={nearMe}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:bg-gray-100"
             />
           </div>
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-md text-sm font-medium transition-colors ${
+            disabled={nearMe}
+            className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-md text-sm font-medium transition-colors disabled:opacity-50 ${
               showFilters || hasActiveFilters
                 ? 'bg-blue-50 border-blue-300 text-blue-700'
                 : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -143,7 +233,7 @@ export default function Home() {
         </form>
 
         {/* Expandable filters */}
-        {showFilters && (
+        {showFilters && !nearMe && (
           <div className="mt-3 p-4 bg-white rounded-lg shadow-md border border-gray-100">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
@@ -219,7 +309,9 @@ export default function Home() {
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <p className="text-gray-600">
-            {isLost ? 'No lost items posted yet. Try adjusting your filters.' : 'No found items posted yet. Try adjusting your filters.'}
+            {nearMe
+              ? `No ${isLost ? 'lost' : 'found'} items nearby yet. Try turning off Near Me to browse everything.`
+              : isLost ? 'No lost items posted yet. Try adjusting your filters.' : 'No found items posted yet. Try adjusting your filters.'}
           </p>
         </div>
       ) : (
