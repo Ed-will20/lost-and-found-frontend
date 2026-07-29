@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
-import { Upload, MapPin } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Upload, MapPin, School } from 'lucide-react';
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -15,6 +16,7 @@ const US_STATES = [
 ];
 
 export default function PostItem() {
+  const { user } = useAuth();
   const [postType, setPostType] = useState('found');
   const [formData, setFormData] = useState({
     title: '', description: '', category: '',
@@ -95,8 +97,6 @@ export default function PostItem() {
   const handleImageChange = (e) => setImages(Array.from(e.target.files));
 
   const handleSwitchToManual = () => {
-    // Clear anything Autocomplete may have already set, and drop lat/lng
-    // since manual entry has no coordinates.
     setFormData((prev) => ({
       ...prev,
       found_address: '',
@@ -157,6 +157,17 @@ export default function PostItem() {
             ? 'Posting a lost item lets others browse it and, if they find it, submit proof and connect with you to arrange the return.'
             : "Posting a found item creates a listing others can browse and submit proof to claim. You'll review claims and approve the one with the best proof."}
         </p>
+
+        {user?.home_campus && (
+          <div className="mb-6 flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
+            <School className="h-4 w-4 text-blue-700 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-800 leading-relaxed">
+              This post will be tagged with your home campus, <strong>{user.home_campus}</strong>, so it shows
+              up by default for others browsing that campus. It'll still be visible to everyone everywhere —
+              change your home campus anytime from your Dashboard.
+            </p>
+          </div>
+        )}
 
         {/* Lost / Found toggle */}
         <div className="mb-6">
