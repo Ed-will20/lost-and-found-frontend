@@ -19,6 +19,23 @@ const STATE_ABBR_MAP = {
   WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
 };
 
+// Readable label for a category value, e.g. "id_passport" -> "ID / Passport",
+// "pet" -> "Pet". Falls back to a simple title-cased split on underscores
+// for anything not explicitly mapped.
+const CATEGORY_LABELS = {
+  wallet: 'Wallet', phone: 'Phone', keys: 'Keys', jewelry: 'Jewelry',
+  electronics: 'Electronics', documents: 'Documents', clothing: 'Clothing',
+  shoes: 'Shoes', bags: 'Bags', books: 'Books', id_passport: 'ID / Passport',
+  glasses: 'Glasses', headphones: 'Headphones', bicycle: 'Bicycle',
+  pet: 'Pet', luggage: 'Luggage', sports_equipment: 'Sports Equipment',
+  umbrella: 'Umbrella', musical_instrument: 'Musical Instrument', other: 'Other',
+};
+
+function categoryLabel(value) {
+  if (!value) return '';
+  return CATEGORY_LABELS[value] || value.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 function normaliseState(input) {
   if (!input) return '';
   const trimmed = input.trim();
@@ -158,6 +175,29 @@ export default function Home() {
   };
 
   const hasActiveFilters = filters.search || filters.state || filters.category;
+
+  // Builds the Near Me empty-state message, folding in category/state
+  // filters when they're active, e.g. "No pet items in California found
+  // within 25 miles yet."
+  const buildNearMeEmptyMessage = () => {
+    const label = categoryLabel(filters.category);
+    const stateName = normaliseState(filters.state);
+    const typeWord = isLost ? 'lost' : 'found';
+
+    let subject;
+    if (label) {
+      subject = `No ${label.toLowerCase()} items`;
+    } else {
+      subject = `No ${typeWord} items`;
+    }
+
+    let locationPhrase = '';
+    if (stateName) {
+      locationPhrase = ` in ${stateName}`;
+    }
+
+    return `${subject}${locationPhrase} within ${radius} miles yet. Try a wider radius, adjusting your filters, or turning off Near Me.`;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -344,7 +384,7 @@ export default function Home() {
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <p className="text-gray-600">
             {nearMe
-              ? `No ${isLost ? 'lost' : 'found'} items within ${radius} miles yet. Try a wider radius or turning off Near Me.`
+              ? buildNearMeEmptyMessage()
               : isLost ? 'No lost items posted yet. Try adjusting your filters.' : 'No found items posted yet. Try adjusting your filters.'}
           </p>
         </div>
