@@ -4,12 +4,12 @@ import { itemsAPI, claimsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Package, FileText, CheckCircle, XCircle, MessageCircle,
-  Image, Pencil, Trash2, MapPin, Phone, Mail, Star, Calendar, User, Camera
+  Image, Pencil, Trash2, MapPin, Phone, Mail, Star, Calendar, User, Camera, School, Check, X as XIcon
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/config';
 
 export default function Dashboard() {
-  const { user, updateProfilePicture } = useAuth();
+  const { user, updateProfilePicture, updateHomeCampus } = useAuth();
   const navigate = useNavigate();
   const [myItems, setMyItems] = useState([]);
   const [myClaims, setMyClaims] = useState([]);
@@ -26,6 +26,10 @@ export default function Dashboard() {
   const [deletingItemId, setDeletingItemId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [editingCampus, setEditingCampus] = useState(false);
+  const [campusInput, setCampusInput] = useState('');
+  const [campusSaving, setCampusSaving] = useState(false);
+  const [campusError, setCampusError] = useState('');
 
   useEffect(() => { fetchData(); }, []);
 
@@ -110,6 +114,30 @@ export default function Dashboard() {
       setDeleteError(error.response?.data?.error || 'Failed to delete item. Please try again.');
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleStartEditCampus = () => {
+    setCampusInput(user?.home_campus || '');
+    setCampusError('');
+    setEditingCampus(true);
+  };
+
+  const handleCancelEditCampus = () => {
+    setEditingCampus(false);
+    setCampusError('');
+  };
+
+  const handleSaveCampus = async () => {
+    setCampusSaving(true);
+    setCampusError('');
+    try {
+      await updateHomeCampus(campusInput.trim());
+      setEditingCampus(false);
+    } catch (error) {
+      setCampusError('Failed to update home campus. Please try again.');
+    } finally {
+      setCampusSaving(false);
     }
   };
 
@@ -204,6 +232,56 @@ export default function Dashboard() {
                   Member since {memberSince}
                 </span>
               )}
+
+              {/* Home campus — editable */}
+              <div className="flex items-start gap-1 text-xs sm:text-sm text-gray-500 pt-1">
+                <School className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                {!editingCampus ? (
+                  <span className="flex items-center gap-2 flex-wrap">
+                    {user?.home_campus ? (
+                      <span>Home campus: <span className="font-medium text-gray-700">{user.home_campus}</span></span>
+                    ) : (
+                      <span className="text-gray-400">No home campus set</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleStartEditCampus}
+                      className="text-blue-600 hover:text-blue-800 underline text-xs"
+                    >
+                      {user?.home_campus ? 'Change' : 'Set one'}
+                    </button>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 flex-wrap w-full">
+                    <input
+                      type="text"
+                      value={campusInput}
+                      onChange={(e) => setCampusInput(e.target.value)}
+                      placeholder="e.g., San Francisco State University"
+                      className="px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 min-w-[180px]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveCampus}
+                      disabled={campusSaving}
+                      className="p-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                      title="Save"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditCampus}
+                      disabled={campusSaving}
+                      className="p-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                      title="Cancel"
+                    >
+                      <XIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </span>
+                )}
+              </div>
+              {campusError && <p className="text-xs text-red-600">{campusError}</p>}
             </div>
           </div>
         </div>

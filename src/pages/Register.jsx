@@ -25,6 +25,7 @@ export default function Register() {
     city: '',
     state: '',
     zip_code: '',
+    home_campus: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -220,6 +221,25 @@ export default function Register() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Home Campus / School <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              name="home_campus"
+              value={formData.home_campus}
+              onChange={handleChange}
+              placeholder="e.g., San Francisco State University"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              This becomes your default browse view. If you register with a student email and leave
+              this blank, we'll set it automatically based on your school — you can always change it
+              later from your dashboard.
+            </p>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -232,7 +252,7 @@ export default function Register() {
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-            Register here
+            Login here
           </Link>
         </p>
       </div>

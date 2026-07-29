@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
-import { MapPin, Calendar, Search, Filter, X, LocateFixed } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { MapPin, Calendar, Search, Filter, X, LocateFixed, School, Globe } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -19,9 +20,6 @@ const STATE_ABBR_MAP = {
   WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming',
 };
 
-// Readable label for a category value, e.g. "id_passport" -> "ID / Passport",
-// "pet" -> "Pet". Falls back to a simple title-cased split on underscores
-// for anything not explicitly mapped.
 const CATEGORY_LABELS = {
   wallet: 'Wallet', phone: 'Phone', keys: 'Keys', jewelry: 'Jewelry',
   electronics: 'Electronics', documents: 'Documents', clothing: 'Clothing',
@@ -48,6 +46,7 @@ const EMPTY_FILTERS = { search: '', state: '', category: '' };
 const RADIUS_OPTIONS = [5, 10, 25, 50];
 
 export default function Home() {
+  const { user } = useAuth();
   const [postType, setPostType] = useState('found');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,26 +57,39 @@ export default function Home() {
   const [locationError, setLocationError] = useState('');
   const [coords, setCoords] = useState(null);
   const [radius, setRadius] = useState(25);
+  // Campus scope: defaults to 'campus' if the logged-in user has a home
+  // campus set, otherwise 'all'. Purely a default browse filter — never
+  // restricts visibility, anyone can still switch to Everywhere.
+  const [scope, setScope] = useState(user?.home_campus ? 'campus' : 'all');
 
   const isLost = postType === 'lost';
+  const activeCampus = scope === 'campus' && user?.home_campus ? user.home_campus : undefined;
+
+  // If the user logs in/out or their home_campus changes after mount,
+  // re-sync the default scope once.
+  useEffect(() => {
+    setScope(user?.home_campus ? 'campus' : 'all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.home_campus]);
 
   useEffect(() => {
     if (nearMe && coords) {
-      fetchNearby(coords, postType, filters, radius);
+      fetchNearby(coords, postType, filters, radius, activeCampus);
     } else {
-      fetchItems(EMPTY_FILTERS, postType);
+      fetchItems(EMPTY_FILTERS, postType, activeCampus);
       setFilters(EMPTY_FILTERS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postType]);
+  }, [postType, scope]);
 
-  const fetchItems = async (activeFilters, activePostType) => {
+  const fetchItems = async (activeFilters, activePostType, campus) => {
     try {
       setLoading(true);
       const normalisedFilters = {
         ...activeFilters,
         state: normaliseState(activeFilters.state),
         post_type: activePostType,
+        campus,
       };
       const response = await itemsAPI.getAll(normalisedFilters);
       setItems(response.data.items);
@@ -88,7 +100,7 @@ export default function Home() {
     }
   };
 
-  const fetchNearby = async (activeCoords, activePostType, activeFilters, activeRadius) => {
+  const fetchNearby = async (activeCoords, activePostType, activeFilters, activeRadius, campus) => {
     try {
       setLoading(true);
       const response = await itemsAPI.searchNearby({
@@ -99,6 +111,7 @@ export default function Home() {
         search: activeFilters.search || undefined,
         category: activeFilters.category || undefined,
         state: normaliseState(activeFilters.state) || undefined,
+        campus,
       });
       setItems(response.data.items);
     } catch (error) {
@@ -110,10 +123,9 @@ export default function Home() {
 
   const handleToggleNearMe = () => {
     if (nearMe) {
-      // Turning off — go back to normal browse with current filters
       setNearMe(false);
       setLocationError('');
-      fetchItems(filters, postType);
+      fetchItems(filters, postType, activeCampus);
       return;
     }
 
@@ -133,7 +145,7 @@ export default function Home() {
         setCoords(newCoords);
         setNearMe(true);
         setLocating(false);
-        fetchNearby(newCoords, postType, filters, radius);
+        fetchNearby(newCoords, postType, filters, radius, activeCampus);
       },
       (err) => {
         setLocating(false);
@@ -151,16 +163,21 @@ export default function Home() {
     const newRadius = parseInt(e.target.value, 10);
     setRadius(newRadius);
     if (nearMe && coords) {
-      fetchNearby(coords, postType, filters, newRadius);
+      fetchNearby(coords, postType, filters, newRadius, activeCampus);
     }
+  };
+
+  const handleScopeChange = (newScope) => {
+    setScope(newScope);
+    // Effect above re-fetches on scope change
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (nearMe && coords) {
-      fetchNearby(coords, postType, filters, radius);
+      fetchNearby(coords, postType, filters, radius, activeCampus);
     } else {
-      fetchItems(filters, postType);
+      fetchItems(filters, postType, activeCampus);
     }
     setShowFilters(false);
   };
@@ -168,35 +185,32 @@ export default function Home() {
   const handleClear = () => {
     setFilters(EMPTY_FILTERS);
     if (nearMe && coords) {
-      fetchNearby(coords, postType, EMPTY_FILTERS, radius);
+      fetchNearby(coords, postType, EMPTY_FILTERS, radius, activeCampus);
     } else {
-      fetchItems(EMPTY_FILTERS, postType);
+      fetchItems(EMPTY_FILTERS, postType, activeCampus);
     }
   };
 
   const hasActiveFilters = filters.search || filters.state || filters.category;
 
-  // Builds the Near Me empty-state message, folding in category/state
-  // filters when they're active, e.g. "No pet items in California found
-  // within 25 miles yet."
   const buildNearMeEmptyMessage = () => {
     const label = categoryLabel(filters.category);
     const stateName = normaliseState(filters.state);
     const typeWord = isLost ? 'lost' : 'found';
 
-    let subject;
-    if (label) {
-      subject = `No ${label.toLowerCase()} items`;
-    } else {
-      subject = `No ${typeWord} items`;
-    }
+    let subject = label ? `No ${label.toLowerCase()} items` : `No ${typeWord} items`;
+    let locationPhrase = stateName ? ` in ${stateName}` : '';
+    let campusPhrase = activeCampus ? ` at ${activeCampus}` : '';
 
-    let locationPhrase = '';
-    if (stateName) {
-      locationPhrase = ` in ${stateName}`;
-    }
+    return `${subject}${campusPhrase}${locationPhrase} within ${radius} miles yet. Try a wider radius, adjusting your filters, or turning off Near Me.`;
+  };
 
-    return `${subject}${locationPhrase} within ${radius} miles yet. Try a wider radius, adjusting your filters, or turning off Near Me.`;
+  const buildBrowseEmptyMessage = () => {
+    const base = isLost ? 'No lost items posted yet.' : 'No found items posted yet.';
+    if (activeCampus) {
+      return `${base.slice(0, -1)} at ${activeCampus} yet. Try switching to Everywhere, or adjusting your filters.`;
+    }
+    return `${base} Try adjusting your filters.`;
   };
 
   return (
@@ -207,6 +221,36 @@ export default function Home() {
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Lost & Found Items</h1>
         <p className="text-base sm:text-lg text-gray-600">Help reunite people with their belongings</p>
       </div>
+
+      {/* Campus scope toggle — only shown if the user has a home campus set */}
+      {user?.home_campus && (
+        <div className="mb-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleScopeChange('campus')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
+              scope === 'campus'
+                ? 'bg-blue-600 border-blue-600 text-white'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <School className="h-4 w-4" />
+            {user.home_campus}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleScopeChange('all')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border transition-colors ${
+              scope === 'all'
+                ? 'bg-blue-600 border-blue-600 text-white'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Globe className="h-4 w-4" />
+            Everywhere
+          </button>
+        </div>
+      )}
 
       {/* Lost / Found tabs */}
       <div className="mb-6 flex border-b border-gray-200">
@@ -383,9 +427,7 @@ export default function Home() {
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <p className="text-gray-600">
-            {nearMe
-              ? buildNearMeEmptyMessage()
-              : isLost ? 'No lost items posted yet. Try adjusting your filters.' : 'No found items posted yet. Try adjusting your filters.'}
+            {nearMe ? buildNearMeEmptyMessage() : buildBrowseEmptyMessage()}
           </p>
         </div>
       ) : (

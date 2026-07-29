@@ -47,12 +47,17 @@ export const AuthProvider = ({ children }) => {
     setUser(response.data.user);
     return response.data;
   };
+  const updateHomeCampus = async (home_campus) => {
+    const response = await authAPI.updateHomeCampus(home_campus);
+    setUser(response.data.user);
+    return response.data;
+  };
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
   return (
-    <AuthContext.Provider value={{ user, login, register, loginWithGoogle, updateProfilePicture, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, loginWithGoogle, updateProfilePicture, updateHomeCampus, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

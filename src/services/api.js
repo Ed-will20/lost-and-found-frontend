@@ -18,6 +18,7 @@ export const authAPI = {
   uploadProfilePicture: (formData) => api.put('/auth/profile-picture', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  updateHomeCampus: (home_campus) => api.put('/auth/home-campus', { home_campus }),
 };
 export const itemsAPI = {
   getAll: (params) => api.get('/items', { params }),
