@@ -71,8 +71,7 @@ export default function Login() {
         <div className="mb-5 flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
           <span className="text-base leading-none mt-0.5">🎓</span>
           <p className="text-xs text-blue-800 leading-relaxed">
-            Registered with a student email? Sign in with email below, not Google —
-            some schools use Microsoft for student accounts, so Google may not find it.
+            Registered with a student email? Sign in below with the email and password you used to register.
           </p>
         </div>
 
