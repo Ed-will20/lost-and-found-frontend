@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { MapPin, Calendar, Search, Filter, X, LocateFixed, School, Globe } from 'lucide-react';
+import { MapPin, Calendar, Search, Filter, X, LocateFixed, School, Globe, Sparkles } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -57,20 +57,22 @@ export default function Home() {
   const [locationError, setLocationError] = useState('');
   const [coords, setCoords] = useState(null);
   const [radius, setRadius] = useState(25);
-  // Campus scope: defaults to 'campus' if the logged-in user has a home
-  // campus set, otherwise 'all'. Purely a default browse filter — never
-  // restricts visibility, anyone can still switch to Everywhere.
   const [scope, setScope] = useState(user?.home_campus ? 'campus' : 'all');
+  const [reunitedStats, setReunitedStats] = useState(null);
 
   const isLost = postType === 'lost';
   const activeCampus = scope === 'campus' && user?.home_campus ? user.home_campus : undefined;
 
-  // If the user logs in/out or their home_campus changes after mount,
-  // re-sync the default scope once.
   useEffect(() => {
     setScope(user?.home_campus ? 'campus' : 'all');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.home_campus]);
+
+  useEffect(() => {
+    itemsAPI.getReunitedStats()
+      .then((res) => setReunitedStats(res.data))
+      .catch((error) => console.error('Error fetching reunited stats:', error));
+  }, []);
 
   useEffect(() => {
     if (nearMe && coords) {
@@ -169,7 +171,6 @@ export default function Home() {
 
   const handleScopeChange = (newScope) => {
     setScope(newScope);
-    // Effect above re-fetches on scope change
   };
 
   const handleSearch = (e) => {
@@ -217,10 +218,29 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Lost & Found Items</h1>
         <p className="text-base sm:text-lg text-gray-600">Help reunite people with their belongings</p>
       </div>
+
+      {/* Reunited trust stat */}
+      {reunitedStats && reunitedStats.all_time > 0 && (
+        <div className="mb-6 flex items-center gap-2 bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-lg px-4 py-2.5">
+          <Sparkles className="h-4 w-4 text-green-600 flex-shrink-0" />
+          <p className="text-sm text-green-800">
+            {reunitedStats.this_month > 0 ? (
+              <>
+                <span className="font-semibold">{reunitedStats.this_month}</span> item{reunitedStats.this_month === 1 ? '' : 's'} reunited this month
+                {reunitedStats.all_time > reunitedStats.this_month && (
+                  <span className="text-green-600"> ({reunitedStats.all_time} all time)</span>
+                )}
+              </>
+            ) : (
+              <><span className="font-semibold">{reunitedStats.all_time}</span> item{reunitedStats.all_time === 1 ? '' : 's'} reunited so far</>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Campus scope toggle — only shown if the user has a home campus set */}
       {user?.home_campus && (

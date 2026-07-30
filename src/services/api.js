@@ -32,6 +32,7 @@ export const itemsAPI = {
   delete: (id) => api.delete(`/items/${id}`),
   getMyItems: () => api.get('/items/my-items'),
   searchNearby: (params) => api.get('/items/nearby', { params }),
+  getReunitedStats: () => api.get('/items/stats/reunited'),
 };
 export const claimsAPI = {
   create: (itemId, data) => api.post(`/items/${itemId}/claim`, data, {
@@ -43,6 +44,7 @@ export const claimsAPI = {
   reject: (claimId, reason) => api.put(`/claims/${claimId}/reject`, {
     rejection_reason: reason || ''
   }),
+  resolve: (claimId) => api.put(`/claims/${claimId}/resolve`),
 };
 export const chatsAPI = {
   getMyChats: () => api.get('/chats'),
@@ -50,5 +52,10 @@ export const chatsAPI = {
   sendMessage: (chatId, text) => api.post(`/chats/${chatId}/messages`, { message_text: text }),
   markRead: (chatId) => api.put(`/chats/${chatId}/read`),
   getUnreadCount: () => api.get('/chats/unread-count'),
+};
+export const ratingsAPI = {
+  getMyRatingForClaim: (claimId) => api.get(`/ratings/${claimId}`),
+  submit: (claimId, data) => api.post(`/ratings/${claimId}`, data),
+  getPublic: (limit) => api.get('/ratings/public', { params: { limit } }),
 };
 export default api;
