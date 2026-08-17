@@ -4,7 +4,7 @@ import { itemsAPI, claimsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Package, FileText, CheckCircle, XCircle, MessageCircle,
-  Image, Pencil, Trash2, MapPin, Phone, Mail, Star, Calendar, User, Camera, School, Check, X as XIcon
+  Image, Pencil, Trash2, MapPin, Phone, Mail, Star, Calendar, User, Camera, School, Check, X as XIcon, Lock
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/config';
 
@@ -141,7 +141,16 @@ export default function Dashboard() {
     }
   };
 
-  const successfulReturns = myClaims.filter(c => c.status === 'approved').length;
+  // Successful returns = resolved items where I was either the finder
+  // (from myItems) OR the claimer (from myClaims, via item_status).
+  // Previously this only checked myClaims.status === 'approved', which
+  // (a) never reflects resolution since claim.status stays 'approved'
+  // forever, and (b) is empty entirely for anyone who was the finder
+  // rather than the claimer.
+  const successfulReturns =
+    myItems.filter((i) => i.status === 'resolved').length +
+    myClaims.filter((c) => c.item_status === 'resolved').length;
+
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null;
@@ -322,7 +331,12 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {myItems.map((item) => (
+              {myItems.map((item) => {
+                // Once an item is no longer 'found' (i.e. claimed or resolved),
+                // editing is locked — a claimant has already trusted a specific
+                // description enough to submit proof against it.
+                const isEditable = item.status === 'found';
+                return (
                 <div key={item.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   {/* Title row */}
                   <div className="flex items-start justify-between gap-2 mb-1">
@@ -356,13 +370,23 @@ export default function Dashboard() {
                       View Claims →
                     </button>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => navigate(`/edit-item/${item.id}`)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
-                      >
-                        <Pencil className="h-3 w-3" />
-                        Edit
-                      </button>
+                      {isEditable ? (
+                        <button
+                          onClick={() => navigate(`/edit-item/${item.id}`)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Edit
+                        </button>
+                      ) : (
+                        <span
+                          className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-md cursor-not-allowed"
+                          title="This item can't be edited once it has a claim in progress."
+                        >
+                          <Lock className="h-3 w-3" />
+                          Edit
+                        </span>
+                      )}
                       <button
                         onClick={() => handleDeleteClick(item.id)}
                         className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-md hover:bg-red-50"
@@ -373,7 +397,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

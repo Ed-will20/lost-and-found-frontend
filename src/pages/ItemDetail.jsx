@@ -227,12 +227,12 @@ export default function ItemDetail() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Proof Images (optional, up to 3)
+                          Proof Images (required, up to 3)
                         </label>
                         <input
                           type="file"
                           accept="image/*"
-                          multiple
+                          multiple required
                           onChange={(e) => setClaimData({ ...claimData, proof_images: Array.from(e.target.files) })}
                           className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />

@@ -15,6 +15,9 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
   const pollRef = useRef(null);
+  // Tracks the last message count we actually scrolled for, so polling
+  // ticks that return the same messages don't force a re-scroll.
+  const lastScrolledCountRef = useRef(0);
 
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState('');
@@ -33,9 +36,14 @@ export default function Chat() {
     return () => clearInterval(pollRef.current);
   }, [id]);
 
-  // Scroll to bottom whenever messages change
+  // Scroll to bottom only when the message count actually grows —
+  // not on every poll tick, since fetchMessages sets a fresh array
+  // reference every 5 seconds even when nothing new arrived.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > lastScrolledCountRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      lastScrolledCountRef.current = messages.length;
+    }
   }, [messages]);
 
   const fetchChat = async () => {
@@ -305,7 +313,7 @@ export default function Chat() {
                 className="mt-0.5"
               />
               <span className="text-xs text-gray-600">
-                Allow this note to be shown publicly (e.g. on our homepage or in outreach materials), with your name attached.
+                Allow this note to be shown publicly (e.g. on our homepage or in outreach materials). Only your first name and last initial will be shown — never your full name.
               </span>
             </label>
 
