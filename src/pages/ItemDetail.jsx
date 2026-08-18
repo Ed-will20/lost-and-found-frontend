@@ -11,6 +11,7 @@ export default function ItemDetail() {
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [removed, setRemoved] = useState(false);
   const [claimData, setClaimData] = useState({ proof_description: '', proof_images: [] });
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -24,6 +25,9 @@ export default function ItemDetail() {
       const response = await itemsAPI.getById(id);
       setItem(response.data.item);
     } catch (error) {
+      if (error.response?.status === 410) {
+        setRemoved(true);
+      }
       console.error('Error fetching item:', error);
     } finally {
       setLoading(false);
@@ -33,6 +37,10 @@ export default function ItemDetail() {
   const handleClaimSubmit = async (e) => {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
+    if (claimData.proof_images.length === 0) {
+      setMessage('At least one proof image is required.');
+      return;
+    }
     setSubmitting(true);
     setMessage('');
     try {
@@ -60,6 +68,16 @@ export default function ItemDetail() {
     </div>
   );
 
+  if (removed) return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
+      <p className="text-gray-700 text-lg font-medium mb-2">This post has been removed</p>
+      <p className="text-gray-500 text-sm mb-4">The person who posted it took it down.</p>
+      <button onClick={() => navigate('/')} className="text-blue-600 hover:underline text-sm">
+        Back to browse
+      </button>
+    </div>
+  );
+
   if (!item) return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-gray-600">Item not found</p>
@@ -79,7 +97,7 @@ export default function ItemDetail() {
       </button>
 
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        {/* Image section — full width on mobile, half on md+ */}
+        {/* Image section -- full width on mobile, half on md+ */}
         {images.length > 0 && (
           <div className="md:hidden">
             <img
@@ -232,7 +250,8 @@ export default function ItemDetail() {
                         <input
                           type="file"
                           accept="image/*"
-                          multiple required
+                          multiple
+                          required
                           onChange={(e) => setClaimData({ ...claimData, proof_images: Array.from(e.target.files) })}
                           className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
