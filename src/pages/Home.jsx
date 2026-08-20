@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { itemsAPI } from '../services/api';
+import { itemsAPI, ratingsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { MapPin, Calendar, Search, Filter, X, LocateFixed, School, Globe, Sparkles } from 'lucide-react';
+import TestimonialCard from '../components/TestimonialCard';
+import { MapPin, Calendar, Search, Filter, X, LocateFixed, School, Globe, Sparkles, Star, MessageSquareQuote } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -59,6 +60,7 @@ export default function Home() {
   const [radius, setRadius] = useState(25);
   const [scope, setScope] = useState(user?.home_campus ? 'campus' : 'all');
   const [reunitedStats, setReunitedStats] = useState(null);
+  const [testimonials, setTestimonials] = useState([]);
 
   const isLost = postType === 'lost';
   const activeCampus = scope === 'campus' && user?.home_campus ? user.home_campus : undefined;
@@ -72,6 +74,12 @@ export default function Home() {
     itemsAPI.getReunitedStats()
       .then((res) => setReunitedStats(res.data))
       .catch((error) => console.error('Error fetching reunited stats:', error));
+  }, []);
+
+  useEffect(() => {
+    ratingsAPI.getPublic(3)
+      .then((res) => setTestimonials(res.data))
+      .catch((error) => console.error('Error fetching testimonials:', error));
   }, []);
 
   useEffect(() => {
@@ -497,6 +505,27 @@ export default function Home() {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Testimonials section - supplementary trust signal, hidden entirely if empty */}
+      {testimonials.length > 0 && (
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+              <h2 className="text-xl font-bold text-gray-900">What people are saying</h2>
+            </div>
+            <Link to="/testimonials" className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700">
+              <MessageSquareQuote className="h-4 w-4" />
+              See all reviews
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {testimonials.map((t) => (
+              <TestimonialCard key={t.id} testimonial={t} />
+            ))}
+          </div>
         </div>
       )}
     </div>

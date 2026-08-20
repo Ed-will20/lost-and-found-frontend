@@ -15,13 +15,12 @@ import Chats from './pages/Chats';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
-
+import Testimonials from './pages/Testimonials';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   return user ? children : <Navigate to="/login" />;
 };
-
 function AppContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -30,7 +29,6 @@ function AppContent() {
       localStorage.setItem('eyefoundyou_referral', ref);
     }
   }, []);
-
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -44,6 +42,7 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/testimonials" element={<Testimonials />} />
             <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
             <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -56,7 +55,6 @@ function AppContent() {
     </Router>
   );
 }
-
 function App() {
   return (
     <AuthProvider>
@@ -64,5 +62,4 @@ function App() {
     </AuthProvider>
   );
 }
-
 export default App;

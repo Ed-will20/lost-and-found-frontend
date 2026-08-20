@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, PlusCircle, LayoutDashboard, MessageCircle, Menu, X } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, MessageCircle, MessageSquareQuote, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { chatsAPI } from '../services/api';
 
@@ -48,6 +48,10 @@ export default function Navbar() {
           <div className="hidden sm:flex items-center space-x-2">
             <Link to="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
               Browse
+            </Link>
+            <Link to="/testimonials" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+              <MessageSquareQuote className="h-4 w-4" />
+              <span>Reviews</span>
             </Link>
             {user ? (
               <>
@@ -110,6 +114,10 @@ export default function Navbar() {
           <div className="px-4 py-3 space-y-1">
             <Link to="/" onClick={close} className="block px-3 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
               Browse Items
+            </Link>
+            <Link to="/testimonials" onClick={close} className="flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <MessageSquareQuote className="h-4 w-4" />
+              Reviews
             </Link>
             {user ? (
               <>
