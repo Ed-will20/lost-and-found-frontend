@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Linkedin, Mail, Github, Globe } from 'lucide-react';
+
 export default function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 mt-16">
@@ -8,7 +9,7 @@ export default function Footer() {
           <div>
             <p className="text-lg font-bold text-gray-900 mb-2">EyeFoundYou</p>
             <p className="text-sm text-gray-500 leading-relaxed">
-              Reconnecting people with their lost belongings -- one item at a time.
+              Reconnecting people with their lost belongings, one item at a time.
             </p>
           </div>
           <div>
@@ -22,37 +23,19 @@ export default function Footer() {
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Get in touch</p>
-            
-              href="mailto:help@eyefoundyou.com"
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-2"
-            >
+            <a href="mailto:help@eyefoundyou.com" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-2">
               <Mail className="h-4 w-4" />
               help@eyefoundyou.com
             </a>
-            
-              href="https://www.linkedin.com/in/edafeogege"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-2"
-            >
+            <a href="https://www.linkedin.com/in/edafeogege" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-2">
               <Linkedin className="h-4 w-4" />
               LinkedIn
             </a>
-            
-              href="https://github.com/Ed-will20"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-2"
-            >
+            <a href="https://github.com/Ed-will20" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mb-2">
               <Github className="h-4 w-4" />
               GitHub
             </a>
-            
-              href="https://ed-will20.github.io/edafe-portfolio/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors"
-            >
+            <a href="https://ed-will20.github.io/edafe-portfolio/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
               <Globe className="h-4 w-4" />
               Portfolio
             </a>
