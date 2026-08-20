@@ -9,7 +9,7 @@ export default function Testimonials() {
 
   useEffect(() => {
     ratingsAPI.getPublic(50)
-      .then((res) => setTestimonials(res.data))
+      .then((res) => setTestimonials(res.data?.testimonials || []))
       .catch((error) => console.error('Error fetching testimonials:', error))
       .finally(() => setLoading(false));
   }, []);
@@ -33,8 +33,8 @@ export default function Testimonials() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {testimonials.map((t) => (
-            <TestimonialCard key={t.id} testimonial={t} />
+          {testimonials.map((t, i) => (
+            <TestimonialCard key={i} testimonial={t} />
           ))}
         </div>
       )}
