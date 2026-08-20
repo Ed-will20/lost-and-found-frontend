@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Upload, MapPin, School } from 'lucide-react';
+import { Upload, MapPin, School, Info } from 'lucide-react';
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -127,8 +127,11 @@ export default function PostItem() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (images.length === 0) {
-      setError(`Please upload at least one image ${isLost ? 'to help others recognize the item' : 'of the item'}.`);
+    // Image required for found items only. Lost items are exempt since the
+    // poster no longer has the item in hand -- a soft nudge is shown in the
+    // form instead of a hard block.
+    if (!isLost && images.length === 0) {
+      setError('Please upload at least one image of the item.');
       return;
     }
     setLoading(true);
@@ -163,7 +166,7 @@ export default function PostItem() {
             <School className="h-4 w-4 text-blue-700 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-blue-800 leading-relaxed">
               This post will be tagged with your home campus, <strong>{user.home_campus}</strong>, so it shows
-              up by default for others browsing that campus. It'll still be visible to everyone everywhere —
+              up by default for others browsing that campus. It'll still be visible to everyone everywhere --
               change your home campus anytime from your Dashboard.
             </p>
           </div>
@@ -262,7 +265,7 @@ export default function PostItem() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <Upload className="inline h-4 w-4 mr-1" />
-              Upload Images (up to 5) *
+              Upload Images (up to 5) {isLost ? '(optional but recommended)' : '*'}
             </label>
             <input
               type="file"
@@ -273,6 +276,16 @@ export default function PostItem() {
             />
             {images.length > 0 && (
               <p className="mt-2 text-sm text-gray-600">{images.length} image(s) selected</p>
+            )}
+            {isLost && images.length === 0 && (
+              <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
+                <Info className="h-4 w-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  No photo? That's okay for lost items. If you have one, even an old photo of the item helps
+                  finders recognize it. If not, add identifying details in the description instead, like a
+                  receipt, serial number, engraving, or case color.
+                </p>
+              </div>
             )}
           </div>
 
