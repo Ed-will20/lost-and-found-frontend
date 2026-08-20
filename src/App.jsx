@@ -16,6 +16,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
 import Testimonials from './pages/Testimonials';
+import ErrorBoundary from './components/ErrorBoundary';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -34,21 +35,23 @@ function AppContent() {
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Navbar />
         <main className="flex-1">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/items/:id" element={<ItemDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/testimonials" element={<Testimonials />} />
-            <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
-            <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/chats/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/items/:id" element={<ItemDetail />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/testimonials" element={<Testimonials />} />
+              <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
+              <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/chats/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+              <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
+            </Routes>
+          </ErrorBoundary>
         </main>
         <Footer />
       </div>
