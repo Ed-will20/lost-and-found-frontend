@@ -20,7 +20,13 @@ export default function Navbar() {
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
+    // Also refresh immediately whenever a chat page marks messages as
+    // read, instead of waiting for the next 30-second poll tick.
+    window.addEventListener('chat:read', fetchUnread);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('chat:read', fetchUnread);
+    };
   }, [user]);
 
   const handleLogout = () => {

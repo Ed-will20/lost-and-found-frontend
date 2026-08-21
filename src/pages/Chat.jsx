@@ -31,6 +31,7 @@ export default function Chat() {
 
   useEffect(() => {
     fetchChat();
+    markThisChatRead();
     // Poll for new messages every 5 seconds
     pollRef.current = setInterval(fetchMessages, 5000);
     return () => clearInterval(pollRef.current);
@@ -45,6 +46,18 @@ export default function Chat() {
       lastScrolledCountRef.current = messages.length;
     }
   }, [messages]);
+
+  // Marks this chat's messages as read, then tells the Navbar (via a
+  // custom event) to refresh its unread badge immediately instead of
+  // waiting for its own 30-second poll tick.
+  const markThisChatRead = async () => {
+    try {
+      await chatsAPI.markRead(id);
+      window.dispatchEvent(new Event('chat:read'));
+    } catch (error) {
+      console.error('Error marking chat as read:', error);
+    }
+  };
 
   const fetchChat = async () => {
     try {
