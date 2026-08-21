@@ -19,7 +19,7 @@ export default function About() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
         <div className="flex items-center gap-4 mb-6">
           <img
-            src="/edafe-profile.jpg"
+            src="/edafe-profile.jpeg"
             alt="Edafe Ogege, founder of EyeFoundYou"
             className="h-16 w-16 sm:h-20 sm:w-20 rounded-full object-cover border-2 border-blue-100 flex-shrink-0"
           />
