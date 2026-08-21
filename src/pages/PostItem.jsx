@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Upload, MapPin, School, Info } from 'lucide-react';
+import { Upload, MapPin, School, Info, X } from 'lucide-react';
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -15,6 +15,8 @@ const US_STATES = [
   'Wisconsin','Wyoming',
 ];
 
+const MAX_IMAGES = 5;
+
 export default function PostItem() {
   const { user } = useAuth();
   const [postType, setPostType] = useState('found');
@@ -25,6 +27,7 @@ export default function PostItem() {
     found_date: '', tags: '',
   });
   const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mapsReady, setMapsReady] = useState(false);
@@ -33,8 +36,17 @@ export default function PostItem() {
 
   const addressInputRef = useRef(null);
   const autocompleteRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const isLost = postType === 'lost';
+
+  // Generate/revoke object URLs for thumbnail previews whenever the
+  // selected image list changes.
+  useEffect(() => {
+    const urls = images.map((file) => URL.createObjectURL(file));
+    setImagePreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [images]);
 
   // Poll for the Google Maps script (loaded via index.html) since load timing
   // isn't guaranteed relative to React mounting.
@@ -94,7 +106,20 @@ export default function PostItem() {
   }, [mapsReady, manualMode]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const handleImageChange = (e) => setImages(Array.from(e.target.files));
+
+  // Accumulate newly picked files onto the existing selection (capped at
+  // MAX_IMAGES) instead of replacing it, since a raw <input type="file">
+  // onChange only ever reports the files picked in that one dialog.
+  const handleImageChange = (e) => {
+    const selected = Array.from(e.target.files);
+    setImages((prev) => [...prev, ...selected].slice(0, MAX_IMAGES));
+    // Reset the input so picking the same file again after removing it works.
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSwitchToManual = () => {
     setFormData((prev) => ({
@@ -265,18 +290,43 @@ export default function PostItem() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <Upload className="inline h-4 w-4 mr-1" />
-              Upload Images (up to 5) {isLost ? '(optional but recommended)' : '*'}
+              Upload Images (up to {MAX_IMAGES}) {isLost ? '(optional but recommended)' : '*'}
             </label>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               multiple
               onChange={handleImageChange}
-              className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              disabled={images.length >= MAX_IMAGES}
+              className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
             />
-            {images.length > 0 && (
-              <p className="mt-2 text-sm text-gray-600">{images.length} image(s) selected</p>
+            {images.length >= MAX_IMAGES && (
+              <p className="mt-1 text-xs text-gray-500">Maximum of {MAX_IMAGES} images reached. Remove one to add another.</p>
             )}
+
+            {imagePreviews.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {imagePreviews.map((url, idx) => (
+                  <div key={url} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Selected ${idx + 1}`}
+                      className="h-20 w-full object-cover rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(idx)}
+                      aria-label={`Remove image ${idx + 1}`}
+                      className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center hover:bg-red-700 shadow"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {isLost && images.length === 0 && (
               <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
                 <Info className="h-4 w-4 text-amber-700 flex-shrink-0 mt-0.5" />
