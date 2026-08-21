@@ -4,7 +4,6 @@ import { Heart, Search, MessageCircle } from 'lucide-react';
 export default function About() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
       {/* Hero */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-6">
@@ -18,22 +17,48 @@ export default function About() {
 
       {/* Story */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">The story behind it</h2>
+        <div className="flex items-center gap-4 mb-6">
+          <img
+            src="/edafe-profile.jpg"
+            alt="Edafe Ogege, founder of EyeFoundYou"
+            className="h-16 w-16 sm:h-20 sm:w-20 rounded-full object-cover border-2 border-blue-100 flex-shrink-0"
+          />
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">The story behind it</h2>
+            <p className="text-sm text-gray-500">Edafe Ogege, Founder</p>
+          </div>
+        </div>
         <div className="space-y-4 text-gray-700 leading-relaxed">
           <p>
-            My name is Edafe Ogege. I'm a rising senior at San Francisco State University studying Computer Science, and I built EyeFoundYou because I know firsthand how frustrating it is to lose something that matters.
+            Is there nothing I can do to help? That's the question I asked myself whenever I saw a lost item:
+            at the train station, on the bus, at school, at the airport, or anywhere else. And if you're like me,
+            you may have asked yourself the same thing. That's where EyeFoundYou comes in.
           </p>
           <p>
-            It started when I lost my school ID on the bus. Sitting there without it, I kept thinking — what if someone found it and genuinely wanted to return it, but had no way to reach me? Losing an ID means cancelling cards, replacing documents, and spending hours undoing the damage. It's stressful in a way that's easy to underestimate until it happens to you.
+            Let me introduce myself. My name is Edafe (Hey-DAH-fey) Ogege. I'm a senior at San Francisco State
+            University studying Computer Science, and I built EyeFoundYou because I know firsthand how frustrating
+            it is to lose something that matters.
           </p>
           <p>
-            But I also thought about the other side. Most people who find something lost are good — they <em>want</em> to help. The problem is the friction. The nearest lost and found might be across town. You're already busy. Taking someone's wallet home feels awkward. So the item sits there, or gets handed to a desk where it disappears into a box.
+            It started when I lost my school ID on the bus ride home, right after using it to pay. Sitting there
+            without it, I kept thinking: what if someone found it and genuinely wanted to return it, but had no
+            way to reach me? Losing an ID means cancelling cards, replacing documents, and spending hours undoing
+            the damage. It's stressful in a way that's easy to underestimate until it happens to you.
           </p>
           <p>
-            EyeFoundYou bridges that gap. Finders can post what they've found in seconds. Owners can submit proof and connect directly. No middlemen, no waiting rooms, no lost-and-found boxes that never get checked.
+            But I also thought about the other side. Most people who find something lost really do want to help.
+            The problem is the friction. The nearest lost and found might be across town. You're already busy.
+            Taking someone's wallet home feels awkward. So the item sits there, or gets handed to a desk where it
+            disappears into a box.
+          </p>
+          <p>
+            EyeFoundYou bridges that gap. Finders can post what they've found in seconds. Owners can submit proof
+            and connect directly. No middlemen, no waiting rooms, no lost-and-found boxes that never get checked.
+            So yes, there is something you can do to help, and you can do it with EyeFoundYou.
           </p>
           <p className="font-medium text-blue-700">
-            The name says it all. I want everyone who's ever lost something to one day be able to say — Eye found you.
+            The name says it all. I want everyone who's ever lost or found something to one day be able to say:
+            Eye found you.
           </p>
         </div>
       </div>
