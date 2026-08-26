@@ -16,6 +16,7 @@ export default function Footer() {
             <p className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Links</p>
             <ul className="space-y-2">
               <li><Link to="/" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Browse items</Link></li>
+              <li><Link to="/how-to-use" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">How it works</Link></li>
               <li><Link to="/about" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">About</Link></li>
               <li><Link to="/contact" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Contact us & FAQ</Link></li>
               <li><Link to="/privacy" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Privacy Policy</Link></li>

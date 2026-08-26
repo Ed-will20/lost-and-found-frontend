@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Camera, MapPin, FileCheck, MessageCircle, CheckCircle2, Info } from 'lucide-react';
+import { Search, Camera, MapPin, FileCheck, MessageCircle, CheckCircle2, Info, HelpCircle } from 'lucide-react';
 
 const FOUND_STEPS = [
   {
@@ -48,10 +48,41 @@ const LOST_STEPS = [
   },
 ];
 
+const FOUND_FAQS = [
+  {
+    q: "I don't want to take the item home. What do I do?",
+    a: "That's completely fine. If you handed it to an official lost-and-found (a bus driver, campus building front desk, event staff, an airport counter), just post the item anyway and mention where you left it in the description. The owner can coordinate pickup from there instead of from you directly.",
+  },
+  {
+    q: 'The item feels sensitive (ID, passport, cash, cards).',
+    a: "For anything like this, it's worth handing it to campus security, police, or a venue's official lost-and-found in addition to posting it here, since those are the safest places for it to sit while it's waiting to be claimed.",
+  },
+  {
+    q: 'Nobody has claimed it yet. Should I take it down?',
+    a: "You can leave it up as long as you're able to hold onto it, or note where it was dropped off if you already turned it in elsewhere. There's no automatic expiration.",
+  },
+];
+
+const LOST_FAQS = [
+  {
+    q: 'I need it back urgently. Is there anything faster than waiting?',
+    a: "Browse the Found items list directly in case it's already been posted, and check with the official lost-and-found for wherever you lost it (bus/transit line, campus building, venue) at the same time. Posting here and checking in person aren't mutually exclusive.",
+  },
+  {
+    q: "Someone's chatting with me about my claim but it feels off.",
+    a: "Chat only opens after a claim has been reviewed and approved, so you're not messaging a stranger before any verification happens. If something still feels wrong, arrange any handoff in a public place and trust your judgment.",
+  },
+  {
+    q: "I don't have a photo of the item at all.",
+    a: 'Totally normal for lost items. A receipt, serial number, engraving, or a specific description of a scuff or sticker works just as well to help a finder recognize it.',
+  },
+];
+
 export default function HowToUse() {
   const [mode, setMode] = useState('found');
   const isFound = mode === 'found';
   const steps = isFound ? FOUND_STEPS : LOST_STEPS;
+  const faqs = isFound ? FOUND_FAQS : LOST_FAQS;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -134,6 +165,22 @@ export default function HowToUse() {
             ? "Claims require proof before you approve one, so you're never just handing an item to whoever asks first."
             : "You'll need to submit proof before a claim is approved -- this protects both you and the finder from someone falsely claiming an item."}
         </p>
+      </div>
+
+      {/* Common situations / FAQ */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <HelpCircle className={`h-5 w-5 ${isFound ? 'text-blue-600' : 'text-orange-600'}`} />
+          <h2 className="text-lg font-semibold text-gray-900">Common Situations</h2>
+        </div>
+        <div className="space-y-3">
+          {faqs.map((item) => (
+            <div key={item.q} className="bg-white rounded-lg border border-gray-100 p-4">
+              <p className="text-sm font-semibold text-gray-900 mb-1">{item.q}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="text-center">
