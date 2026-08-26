@@ -16,6 +16,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
 import Testimonials from './pages/Testimonials';
+import HowToUse from './pages/HowToUse';
 import ErrorBoundary from './components/ErrorBoundary';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -45,6 +46,7 @@ function AppContent() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/testimonials" element={<Testimonials />} />
+              <Route path="/how-to-use" element={<HowToUse />} />
               <Route path="/post-item" element={<ProtectedRoute><PostItem /></ProtectedRoute>} />
               <Route path="/edit-item/:id" element={<ProtectedRoute><EditItem /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
