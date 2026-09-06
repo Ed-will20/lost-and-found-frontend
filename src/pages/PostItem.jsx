@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Upload, MapPin, School, Info, X } from 'lucide-react';
+import { Upload, MapPin, School, Info, X, ShieldAlert } from 'lucide-react';
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -16,6 +16,11 @@ const US_STATES = [
 ];
 
 const MAX_IMAGES = 5;
+
+// Categories that trigger the sensitive-item advisory banner. Mirrored
+// server-side in itemController.js as the source of truth -- this
+// frontend copy just controls when the banner shows.
+const SENSITIVE_CATEGORIES = ['id_passport', 'documents', 'wallet'];
 
 export default function PostItem() {
   const { user } = useAuth();
@@ -39,6 +44,7 @@ export default function PostItem() {
   const fileInputRef = useRef(null);
 
   const isLost = postType === 'lost';
+  const isSensitiveCategory = SENSITIVE_CATEGORIES.includes(formData.category);
 
   // Generate/revoke object URLs for thumbnail previews whenever the
   // selected image list changes.
@@ -164,6 +170,7 @@ export default function PostItem() {
       const data = new FormData();
       Object.keys(formData).forEach(key => data.append(key, formData[key]));
       data.append('post_type', postType);
+      data.append('is_sensitive', isSensitiveCategory ? 'true' : 'false');
       images.forEach(image => data.append('images', image));
       await itemsAPI.create(data);
       navigate('/dashboard');
@@ -285,6 +292,17 @@ export default function PostItem() {
               <option value="musical_instrument">Musical Instrument</option>
               <option value="other">Other</option>
             </select>
+            {isSensitiveCategory && (
+              <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
+                <ShieldAlert className="h-4 w-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  This category can involve sensitive personal info. Please don't include full ID numbers,
+                  card numbers, or other sensitive details in the description or photos. If possible, consider
+                  also taking this to campus police or the nearest lost &amp; found desk -- you can still post
+                  it here too, since that's how the original owner will find out it's been located.
+                </p>
+              </div>
+            )}
           </div>
 
           <div>

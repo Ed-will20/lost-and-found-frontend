@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { itemsAPI } from '../services/api';
-import { Upload, MapPin, X, AlertTriangle } from 'lucide-react';
+import { Upload, MapPin, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { API_BASE_URL } from '../config/config';
 
 const US_STATES = [
@@ -16,6 +16,10 @@ const US_STATES = [
 ];
 
 const MAX_IMAGES = 5;
+
+// Mirrors the same list in PostItem.jsx and itemController.js -- server is
+// the source of truth, this just controls when the banner shows here too.
+const SENSITIVE_CATEGORIES = ['id_passport', 'documents', 'wallet'];
 
 export default function EditItem() {
   const { id } = useParams();
@@ -43,6 +47,7 @@ export default function EditItem() {
 
   const fileInputRef = useRef(null);
   const isLost = postType === 'lost';
+  const isSensitiveCategory = SENSITIVE_CATEGORIES.includes(formData.category);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -105,6 +110,7 @@ export default function EditItem() {
       const data = new FormData();
       Object.keys(formData).forEach(key => data.append(key, formData[key]));
       data.append('post_type', postType);
+      data.append('is_sensitive', isSensitiveCategory ? 'true' : 'false');
       newImages.forEach(img => data.append('images', img));
       await itemsAPI.update(id, data);
       navigate('/dashboard');
@@ -220,6 +226,17 @@ export default function EditItem() {
               <option value="musical_instrument">Musical Instrument</option>
               <option value="other">Other</option>
             </select>
+            {isSensitiveCategory && (
+              <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
+                <ShieldAlert className="h-4 w-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  This category can involve sensitive personal info. Please don't include full ID numbers,
+                  card numbers, or other sensitive details in the description or photos. If possible, consider
+                  also taking this to campus police or the nearest lost &amp; found desk -- you can still keep
+                  it posted here too, since that's how the original owner will find out it's been located.
+                </p>
+              </div>
+            )}
           </div>
 
           {existingImages.length > 0 && (
