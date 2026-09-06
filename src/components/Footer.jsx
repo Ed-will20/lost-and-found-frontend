@@ -20,6 +20,7 @@ export default function Footer() {
               <li><Link to="/about" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">About</Link></li>
               <li><Link to="/contact" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Contact us & FAQ</Link></li>
               <li><Link to="/feedback" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Feedback</Link></li>
+              <li><Link to="/feedback-board" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Feedback Board</Link></li>
               <li><Link to="/privacy" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>

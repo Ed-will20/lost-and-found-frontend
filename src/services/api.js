@@ -60,6 +60,9 @@ export const ratingsAPI = {
 };
 export const feedbackAPI = {
   submit: (data) => api.post('/feedback', data),
+  getPublic: () => api.get('/feedback/public'),
+  getAllAdmin: () => api.get('/feedback/admin'),
+  togglePublic: (id) => api.patch(`/feedback/admin/${id}/toggle-public`),
 };
 
 export default api;
