@@ -58,4 +58,8 @@ export const ratingsAPI = {
   submit: (claimId, data) => api.post(`/ratings/${claimId}`, data),
   getPublic: (limit) => api.get('/ratings/public', { params: { limit } }),
 };
+export const feedbackAPI = {
+  submit: (data) => api.post('/feedback', data),
+};
+
 export default api;

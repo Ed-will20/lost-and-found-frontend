@@ -14,6 +14,7 @@ import Chat from './pages/Chat';
 import Chats from './pages/Chats';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Feedback from './pages/Feedback';
 import Privacy from './pages/Privacy';
 import Testimonials from './pages/Testimonials';
 import HowToUse from './pages/HowToUse';
@@ -44,6 +45,7 @@ function AppContent() {
               <Route path="/items/:id" element={<ItemDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/feedback" element={<Feedback />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/testimonials" element={<Testimonials />} />
               <Route path="/how-to-use" element={<HowToUse />} />
